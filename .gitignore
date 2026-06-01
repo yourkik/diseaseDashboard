@@ -1,0 +1,34 @@
+# Environments
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+.venv/
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+.npm/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test & Debug Scripts (사용자 요청: github 업로드 제외)
+backend/debug_*.py
+backend/test_*.py
+backend/poll_*.py
+
+# Database / Local
+*.sqlite3
+db.sqlite3
