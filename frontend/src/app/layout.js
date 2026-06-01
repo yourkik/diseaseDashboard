@@ -1,6 +1,7 @@
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import Link from 'next/link';
+// import Script from 'next/script';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -20,6 +21,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ko" className={`${inter.variable} ${outfit.variable}`}>
+      <head>
+         
+      </head>
       <body>
         <nav className="navbar">
           <div>

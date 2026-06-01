@@ -1,3 +1,26 @@
+"use client";
+
+import React from "react";
+import dynamic from "next/dynamic";
+
+const KakaoMap = dynamic(() => import("./map"), {
+  ssr: false,
+  loading: () => (
+    <div style={{ 
+      width: "100%", 
+      height: "450px", 
+      display: "flex", 
+      justifyContent: "center", 
+      alignItems: "center", 
+      backgroundColor: "#f8fafc",
+      color: "#64748b",
+      borderRadius: "12px"
+    }}>
+      지도를 불러오는 중입니다...
+    </div>
+  ),
+});
+
 export default function Home() {
   return (
     <main className="container animate-fade-in">
@@ -21,7 +44,7 @@ export default function Home() {
             <h3>일일 확진자 (모의)</h3>
             <span className="badge danger">↑ 15%</span>
           </div>
-          <h1 style={{ fontSize: '3.5rem', margin: '10px 0', color: 'var(--text-main)' }}>15,034<span style={{fontSize: '1.2rem', color: 'var(--text-muted)'}}> 명</span></h1>
+          <h1 style={{ fontSize: '3.5rem', margin: '10px 0', color: 'var(--text-main)' }}>15,034<span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}> 명</span></h1>
           <p className="subtitle">어제 대비 2,010명 증가</p>
         </div>
 
@@ -31,23 +54,19 @@ export default function Home() {
             <span className="badge success">안내</span>
           </div>
           <ul style={{ listStylePosition: 'inside', lineHeight: '1.8', color: 'var(--text-muted)' }}>
-            <li><strong style={{color: 'var(--text-main)'}}>마스크 착용:</strong> 대중교통 및 다중이용시설</li>
-            <li><strong style={{color: 'var(--text-main)'}}>위생 관리:</strong> 귀가 후 손 씻기 생활화</li>
-            <li><strong style={{color: 'var(--text-main)'}}>병원 방문:</strong> 고열 발생 시 즉시 내원</li>
+            <li><strong style={{ color: 'var(--text-main)' }}>마스크 착용:</strong> 대중교통 및 다중이용시설</li>
+            <li><strong style={{ color: 'var(--text-main)' }}>위생 관리:</strong> 귀가 후 손 씻기 생활화</li>
+            <li><strong style={{ color: 'var(--text-main)' }}>병원 방문:</strong> 고열 발생 시 즉시 내원</li>
           </ul>
         </div>
       </div>
 
       <div style={{ marginBottom: '40px' }}>
-        <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>지역별 감염병 확산 지도 (준비 중)</h2>
-        <div className="glass-card" style={{ height: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
-          {/* 지도 배경을 모사하는 그라디언트 및 격자 무늬 */}
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.1, backgroundImage: 'linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-          
-          <div style={{ zIndex: 1, textAlign: 'center' }}>
-            <span style={{ fontSize: '3rem' }}>🗺️</span>
-            <h3 style={{ marginTop: '16px', color: 'var(--text-main)' }}>Cloud Map Service 연결 대기 중</h3>
-            <p style={{ marginTop: '8px', color: 'var(--text-muted)' }}>여기에 Azure Maps, 카카오맵 등의 클라우드 지도 서비스가 연동되어 히트맵(Heatmap) 형태로 확산세가 표시됩니다.</p>
+        <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>지역별 감염병 확산 지도</h2>
+
+        <div className="glass-card" style={{ position: 'relative', overflow: 'hidden', padding: '0' }}>
+          <div>
+            <KakaoMap />
           </div>
         </div>
       </div>
