@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 # 서비스 레이어 임포트
-from app.services.ingestion import fetch_kdca_stats, get_integrated_news
+from app.services.ingestion import fetch_kdca_stats, get_integrated_news, fetch_kdca_disease_contents
 
 # .env 환경변수 로드
 load_dotenv()
@@ -34,3 +34,10 @@ def get_disease_news():
     """Bing API 및 GDELT API 기반 감염병 통합 뉴스 반환"""
     data = get_integrated_news()
     return data
+
+@app.get("/api/data/contents")
+def get_disease_contents():
+    """질병관리청 건강정보/감염병 콘텐츠 반환"""
+    data = fetch_kdca_disease_contents()
+    return data
+

@@ -55,6 +55,10 @@ AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
 # 3. Bing Search Grounding 연결 이름
 # 관리 센터 -> 연결된 리소스(Connected resources)에 등록된 빙 검색 이름
 BING_CONNECTION_NAME=GroundingBingSearch
+
+# 4. 질병관리청 API KEY(KDCA_TOKEN)
+# KDCA의 경우 기본 url + 개인 token + 질병 ID의 형태로 데이터 접근 방식 사용
+이를 위해 URL을 만드는 기능은 ingestion에 포함되어 있음 -> API 추가 or 삭제 시 ID 부분 수정 필요
 ```
 
 ---

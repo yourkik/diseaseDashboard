@@ -8,3 +8,9 @@ sqlalchemy==2.0.30
 # Azure AI Agent Service
 azure-ai-projects==2.1.0
 azure-identity==1.19.0
+
+# EDA & Data Science
+pandas
+matplotlib
+seaborn
+jupyter

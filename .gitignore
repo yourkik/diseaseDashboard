@@ -1,9 +1,17 @@
-# Environments
+# ==============================================================================
+# 감염병 대시보드 프로젝트 (Disease Dashboard) Git Ignore 설정
+# ==============================================================================
+
+# 1. 공통 환경 변수 및 인증 정보 (절대 업로드하지 마세요)
+# ------------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
+*.pem
+*.key
 
-# Python
+# 2. 파이썬 (Backend / EDA)
+# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
@@ -11,24 +19,40 @@ __pycache__/
 venv/
 env/
 .venv/
+myenv/
+backend/venv/
+backend/env/
 
-# Node / Frontend
-node_modules/
-dist/
-build/
-.npm/
-
-# IDE / OS
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-
-# Test & Debug Scripts (사용자 요청: github 업로드 제외)
+# Test & Debug Scripts
 backend/debug_*.py
 backend/test_*.py
 backend/poll_*.py
 
-# Database / Local
+# 3. 노드 & 넥스트JS (Frontend)
+# ------------------------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+.npm/
+dist/
+build/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# 4. 데이터베이스 및 수집 데이터 (EDA)
+# ------------------------------------------------------------------------------
 *.sqlite3
 db.sqlite3
+backend/eda/data/
+backend/eda/*.csv
+backend/eda/*.png
+backend/eda/test_out.xml
+*.csv
+
+# 5. OS 및 에디터 설정
+# ------------------------------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
