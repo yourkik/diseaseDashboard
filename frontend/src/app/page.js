@@ -1,14 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import dynamic from "next/dynamic";
 
-const KakaoMap = dynamic(() => import("./map"), {
+const AzureMap = dynamic(() => import("./mapAzure"), {
   ssr: false,
   loading: () => (
     <div style={{ 
       width: "100%", 
-      height: "450px", 
+      height: "600px", 
       display: "flex", 
       justifyContent: "center", 
       alignItems: "center", 
@@ -22,6 +22,10 @@ const KakaoMap = dynamic(() => import("./map"), {
 });
 
 export default function Home() {
+  const [selectedDisease, setSelectedDisease] = useState("코로나19");
+
+  const diseases = ["코로나19", "독감", "뎅기열", "말라리아", "신증후군출혈열"];
+
   return (
     <main className="container animate-fade-in">
       <header style={{ marginBottom: '40px', textAlign: 'center' }}>
@@ -32,20 +36,29 @@ export default function Home() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '40px' }}>
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3>현재 위험도</h3>
-            <span className="badge warning">주의</span>
+            <h3>선택된 질병</h3>
+            <span className="badge success">관찰중</span>
           </div>
-          <h1 style={{ fontSize: '3.5rem', margin: '10px 0', color: 'var(--warning)' }}>Level 2</h1>
-          <p className="subtitle">전국적인 독감 유행 조짐. 환자 수 급증 중.</p>
+          <h1 style={{ fontSize: '2.5rem', margin: '10px 0', color: 'var(--text-main)' }}>{selectedDisease}</h1>
+          <select 
+            value={selectedDisease} 
+            onChange={(e) => setSelectedDisease(e.target.value)}
+            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '1rem', marginTop: '10px', width: '100%' }}
+          >
+            {diseases.map(d => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
         </div>
 
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3>일일 확진자 (모의)</h3>
-            <span className="badge danger">↑ 15%</span>
+            <h3>전국 위험도 요약</h3>
+            <span className="badge warning">AI 분석</span>
           </div>
-          <h1 style={{ fontSize: '3.5rem', margin: '10px 0', color: 'var(--text-main)' }}>15,034<span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}> 명</span></h1>
-          <p className="subtitle">어제 대비 2,010명 증가</p>
+          <p className="subtitle" style={{ lineHeight: '1.6' }}>
+            지도에 표시된 위험도(Red, Orange, Green)는 <strong>질병관리청 확진자 수</strong>와 <strong>AI 뉴스 기반 정성적 평가</strong>가 결합된 하이브리드 결과입니다. 선(Line)은 확산의 주요 방향을 나타냅니다.
+          </p>
         </div>
 
         <div className="glass-card">
@@ -56,32 +69,18 @@ export default function Home() {
           <ul style={{ listStylePosition: 'inside', lineHeight: '1.8', color: 'var(--text-muted)' }}>
             <li><strong style={{ color: 'var(--text-main)' }}>마스크 착용:</strong> 대중교통 및 다중이용시설</li>
             <li><strong style={{ color: 'var(--text-main)' }}>위생 관리:</strong> 귀가 후 손 씻기 생활화</li>
-            <li><strong style={{ color: 'var(--text-main)' }}>병원 방문:</strong> 고열 발생 시 즉시 내원</li>
+            <li><strong style={{ color: 'var(--text-main)' }}>관찰 요망:</strong> 확산 경로에 인접한 지역</li>
           </ul>
         </div>
       </div>
 
       <div style={{ marginBottom: '40px' }}>
-        <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>지역별 감염병 확산 지도</h2>
+        <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>지역별 감염병 확산 지도 ({selectedDisease})</h2>
 
         <div className="glass-card" style={{ position: 'relative', overflow: 'hidden', padding: '0' }}>
           <div>
-            <KakaoMap />
+            <AzureMap disease={selectedDisease} />
           </div>
-        </div>
-      </div>
-
-      <h2 style={{ marginBottom: '24px', color: 'var(--text-main)' }}>최신 AI 뉴스 요약 (RAG)</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div className="glass-card" style={{ borderLeft: '4px solid var(--warning)' }}>
-          <h3 style={{ marginBottom: '8px' }}>올 겨울 독감 유행 조짐... 보건당국 긴장</h3>
-          <p style={{ color: 'var(--text-muted)' }}>AI 분석: 현재 독감 환자가 전국적으로 급증하고 있어 주의가 필요합니다. 대중교통 및 다중이용시설 방문 시 마스크 착용을 권장합니다.</p>
-          <div style={{ marginTop: '12px', fontSize: '0.85rem', color: '#64748b' }}>방금 전 • 빙(Bing) 뉴스 기반</div>
-        </div>
-        <div className="glass-card" style={{ borderLeft: '4px solid var(--danger)' }}>
-          <h3 style={{ marginBottom: '8px' }}>New Infectious Disease Outbreak in Southeast Asia</h3>
-          <p style={{ color: 'var(--text-muted)' }}>AI 분석: 동남아시아 지역에서 새로운 감염병이 발생하여 모니터링 중입니다. 해당 지역으로의 여행 시 각별한 주의와 사전 예방 접종 확인이 필요합니다.</p>
-          <div style={{ marginTop: '12px', fontSize: '0.85rem', color: '#64748b' }}>2시간 전 • 글로벌 모니터링</div>
         </div>
       </div>
     </main>

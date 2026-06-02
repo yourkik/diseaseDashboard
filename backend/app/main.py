@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
@@ -12,6 +13,15 @@ app = FastAPI(
     title="Disease Dashboard API",
     description="감염병 수집, RAG 전처리 및 프론트엔드 서빙을 위한 백엔드 API",
     version="1.0.0"
+)
+
+# 프론트엔드(Next.js) 연동을 위한 CORS 설정 추가
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/")
@@ -41,3 +51,8 @@ def get_disease_contents():
     data = fetch_kdca_disease_contents()
     return data
 
+@app.get("/api/map/disease-spread")
+def get_map_disease_spread(disease: str = "코로나19"):
+    """지도 시각화를 위한 질병 통합 데이터 반환"""
+    from app.services.map_aggregator import get_hybrid_map_data
+    return get_hybrid_map_data(disease)
