@@ -1,24 +1,70 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { mockMapData } from './mockData';
 
 export default function MapAzure({ disease = "코로나19" }) {
   const mapContainer = useRef(null);
   const mapInstance = useRef(null);
   const dataSourceRef = useRef(null);
-  const popupRef = useRef(null);
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const router = useRouter();
 
-  // 지도 인스턴스 초기화
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const animationRef = useRef(null);
+  const hoveredFeatureRef = useRef(null);
+
+  // 기본 반경 연산 헬퍼 함수
+  const getBaseRadius = (count) => {
+    if (count <= 0) return 10;
+    if (count >= 1000) return 40;
+    return 10 + (count / 1000) * 30;
+  };
+
+  // [기능 무결성 확보 1] 프로프(disease) 및 검색어(searchQuery) 연동 데이터 필터링 파이프라인
+  useEffect(() => {
+    if (!dataSourceRef.current) return;
+
+    const filteredData = mockMapData.filter(data => {
+      // 대시보드 상단 선택 질병(prop)과 데이터의 질병명이 일치하는지 선제 검증
+      const matchesDiseaseProp = data.diseaseName === disease;
+      
+      // 검색창 입력값에 따른 지역명 매칭 여부를 검증
+      const matchesSearch = data.region.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      return matchesDiseaseProp && matchesSearch;
+    });
+
+    dataSourceRef.current.clear();
+    
+    // 필터링된 데이터셋을 맵 버블 레이어에 재투입하며 동적 반경 연산 속성을 동기화
+    filteredData.forEach((data) => {
+      dataSourceRef.current.add(
+        new window.atlas.data.Feature(
+          new window.atlas.data.Point([data.lng, data.lat]), 
+          {
+            id: data.id,
+            count: data.count,
+            region: data.region,
+            diseaseNm: data.diseaseName,
+            currentRadius: getBaseRadius(data.count) 
+          }
+        )
+      );
+    });
+  }, [searchQuery, disease]);
+
+  // [기능 무결성 확보 2] Azure Maps 인프라 초기화 및 고성능 그래픽스 애니메이션 파이프라인
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const initializeAzureMap = () => {
-      if (window.atlas && mapContainer.current && !mapInstance.current) {
+      if (window.atlas) {
+        if (!mapContainer.current) return;
+
         const map = new window.atlas.Map(mapContainer.current, {
-          center: [127.6358, 36.2683], // 한국 중심점
+          center: [127.6358, 36.2683],
           zoom: 6,
           view: 'Auto',
           authOptions: {
@@ -30,77 +76,124 @@ export default function MapAzure({ disease = "코로나19" }) {
         mapInstance.current = map;
 
         map.events.add('ready', () => {
-          console.log("Azure Maps Ready.");
+          console.log("Azure Maps 대시보드 렌더링에 성공했습니다.");
           
-          // 데이터 소스 추가
           const dataSource = new window.atlas.source.DataSource();
           map.sources.add(dataSource);
           dataSourceRef.current = dataSource;
 
-          // 팝업 추가
-          popupRef.current = new window.atlas.Popup({
-            pixelOffset: [0, -18],
+          // 최초 렌더링 시 상단 선택 질병에 부합하는 데이터만 선별하여 적재
+          const initialData = mockMapData.filter(data => data.diseaseName === disease);
+          initialData.forEach((data) => {
+            dataSource.add(
+              new window.atlas.data.Feature(
+                new window.atlas.data.Point([data.lng, data.lat]), 
+                {
+                  id: data.id,
+                  count: data.count,
+                  region: data.region,
+                  diseaseNm: data.diseaseName,
+                  currentRadius: getBaseRadius(data.count) 
+                }
+              )
+            );
+          });
+
+          // 데이터 속성 'currentRadius'를 실시간 수신하는 버블 레이어 구축
+          const bubbleLayer = new window.atlas.layer.BubbleLayer(dataSource, null, {
+            radius: ['get', 'currentRadius'],
+            color: [
+              'step',
+              ['get', 'count'],
+              '#22c55e',  
+              100, '#f97316', 
+              500, '#ef4444'  
+            ],
+            strokeColor: 'white',
+            strokeWidth: 2,
+            opacity: 0.8
+          });
+
+          map.layers.add(bubbleLayer);
+
+          const popup = new window.atlas.Popup({
+            pixelOffset: [0, -12],
             closeButton: false
           });
 
-          // Line Layer (전파 방향)
-          map.layers.add(new window.atlas.layer.LineLayer(dataSource, null, {
-            strokeColor: '#3b82f6',
-            strokeWidth: 3,
-            filter: ['==', ['geometry-type'], 'LineString']
-          }));
+          // 60fps 인터폴레이션 애니메이션 프레임 제어 엔진
+          const animate = () => {
+            if (!dataSourceRef.current) return;
 
-          // Bubble Layer (지역별 수치/위험도)
-          const bubbleLayer = new window.atlas.layer.BubbleLayer(dataSource, null, {
-            filter: ['==', ['geometry-type'], 'Point'],
-            color: [
-              'match',
-              ['get', 'risk_level'],
-              'High', '#ef4444',     // Red
-              'Medium', '#f97316',   // Orange
-              'Low', '#22c55e',      // Green
-              '#6b7280'              // Gray (default)
-            ],
-            radius: [
-              'step',
-              ['get', 'cases'],
-              10,    // cases가 없거나 0일때 기본 반경
-              100, 15, // 100 이상이면 15
-              1000, 20, // 1000 이상이면 20
-              10000, 30 // 10000 이상이면 30
-            ],
-            strokeColor: 'white',
-            strokeWidth: 2
-          });
-          map.layers.add(bubbleLayer);
+            dataSource.getShapes().forEach(shape => {
+              const props = shape.getProperties();
+              const base = getBaseRadius(props.count);
+              const target = (hoveredFeatureRef.current && hoveredFeatureRef.current.getId() === shape.getId()) ? base + 6 : base;
 
-          // 마우스 오버 팝업 이벤트
-          map.events.add('mouseover', bubbleLayer, (e) => {
+              if (Math.abs(props.currentRadius - target) > 0.01) {
+                const nextRadius = props.currentRadius + (target - props.currentRadius) * 0.15;
+                shape.setProperties({ ...props, currentRadius: nextRadius });
+              }
+            });
+
+            animationRef.current = requestAnimationFrame(animate);
+          };
+
+          animationRef.current = requestAnimationFrame(animate);
+
+          // 마우스 상호작용 인터페이스 및 예외 방어 로직
+          map.events.add('mousemove', bubbleLayer, (e) => {
             if (e.shapes && e.shapes.length > 0) {
-              const properties = e.shapes[0].getProperties();
-              const coordinate = e.shapes[0].getCoordinates();
+              map.getCanvasContainer().style.cursor = 'pointer';
+              const shape = e.shapes[0];
               
-              const casesText = properties.cases ? `${properties.cases.toLocaleString()}명` : '수치 미제공(AI 추정)';
-              
-              popupRef.current.setOptions({
-                position: coordinate,
-                content: `<div style="padding:10px; font-family:sans-serif;">
-                            <strong>${properties.name}</strong><br/>
-                            확진자 수: ${casesText}<br/>
-                            위험도: <b>${properties.risk_level}</b>
-                          </div>`
-              });
-              popupRef.current.open(map);
+              if (!hoveredFeatureRef.current || hoveredFeatureRef.current.getId() !== shape.getId()) {
+                hoveredFeatureRef.current = shape;
+                
+                const properties = shape.getProperties();
+                const coordinate = shape.getCoordinates();
+
+                const popupContent = `
+                  <div style="padding: 12px; font-family: sans-serif; min-width: 150px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px;">
+                    <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 14px; font-weight: bold;">${properties.region} 지역</h4>
+                    <div style="font-size: 12px; color: #475569; margin-bottom: 4px;">지정 감염병: <span style="color:#2563eb; font-weight:600;">${properties.diseaseNm}</span></div>
+                    <div style="font-size: 13px; color: #dc2626; font-weight: bold;">확진자 집계: ${properties.count.toLocaleString()}명</div>
+                  </div>
+                `;
+
+                popup.setOptions({ content: popupContent, position: coordinate });
+                popup.open(map);
+              }
             }
           });
 
-          map.events.add('mouseleave', bubbleLayer, () => {
-            popupRef.current.close();
+          const clearHoverState = () => {
+            map.getCanvasContainer().style.cursor = '';
+            popup.close();
+            hoveredFeatureRef.current = null;
+          };
+
+          map.events.add('mouseleave', bubbleLayer, clearHoverState);
+          map.events.add('mousemove', (e) => {
+            const features = map.layers.getRenderedShapes(e.position, [bubbleLayer]);
+            if (features.length === 0) {
+              clearHoverState();
+            }
           });
 
-          // 초기 로드가 완료되면 데이터 패칭
-          fetchDiseaseData(disease);
-          
+          map.events.add('click', bubbleLayer, (e) => {
+            if (e.shapes && e.shapes.length > 0) {
+              const properties = e.shapes[0].getProperties();
+              const regionId = properties.id;
+
+              if (regionId) {
+                if (animationRef.current) cancelAnimationFrame(animationRef.current);
+                popup.close();
+                router.push(`/azure/details/${regionId}`);
+              }
+            }
+          });
+
           setTimeout(() => { map.resize(); }, 200);
         });
       }
@@ -121,97 +214,27 @@ export default function MapAzure({ disease = "코로나19" }) {
       script.onload = initializeAzureMap;
       document.head.appendChild(script);
     }
-  }, []);
 
-  // 질병 키워드가 바뀔 때마다 데이터 다시 불러오기
-  useEffect(() => {
-    if (mapInstance.current && dataSourceRef.current) {
-      fetchDiseaseData(disease);
-    }
-  }, [disease]);
-
-  const fetchDiseaseData = async (keyword) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`http://localhost:8000/api/map/disease-spread?disease=${encodeURIComponent(keyword)}`);
-      if (!response.ok) throw new Error('API 연동 실패');
-      
-      const result = await response.json();
-      const mapData = result.data || [];
-      
-      if (dataSourceRef.current) {
-        dataSourceRef.current.clear();
-        
-        // 데이터 파싱 및 Shape 추가
-        const features = [];
-        
-        // 좌표 매핑용 딕셔너리 (Line 그릴 때 사용)
-        const coordsMap = {};
-        
-        mapData.forEach(region => {
-          if (region.coordinates && region.coordinates.length === 2) {
-            coordsMap[region.name] = region.coordinates;
-            
-            // 점(Point) 데이터 추가
-            features.push(new window.atlas.data.Feature(
-              new window.atlas.data.Point(region.coordinates),
-              {
-                name: region.name,
-                cases: region.cases || 0,
-                risk_level: region.risk_level || 'Medium'
-              }
-            ));
-          }
-        });
-        
-        // 선(LineString) 데이터 추가 (spread_to 필드가 있는 경우)
-        mapData.forEach(region => {
-          if (region.spread_to && Array.isArray(region.spread_to) && coordsMap[region.name]) {
-            region.spread_to.forEach(targetName => {
-              if (coordsMap[targetName]) {
-                features.push(new window.atlas.data.Feature(
-                  new window.atlas.data.LineString([
-                    coordsMap[region.name],
-                    coordsMap[targetName]
-                  ])
-                ));
-              }
-            });
-          }
-        });
-
-        dataSourceRef.current.add(features);
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [router, disease]);
 
   return (
-    <div style={{ width: '100%', position: 'relative' }}>
-      {loading && (
-        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 10, background: 'white', padding: '5px 10px', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-          데이터 분석 중... (AI Agent 실행중)
-        </div>
-      )}
-      {error && (
-        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 10, background: '#fee2e2', color: '#ef4444', padding: '5px 10px', borderRadius: '4px' }}>
-          오류: {error}
-        </div>
-      )}
-      <div 
-        ref={mapContainer} 
-        style={{ 
-          width: '100%', 
-          height: '600px', 
-          borderRadius: '12px',
-          backgroundColor: '#f8fafc'
-        }}
-      />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', fontFamily: 'sans-serif' }}>
+      <div style={{ alignSelf: 'flex-end', width: '300px' }}>
+        <input 
+          type="text"
+          placeholder="조회할 지역명 입력..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+        />
+      </div>
+
+      <div style={{ width: '100%', position: 'relative' }}>
+        <div ref={mapContainer} style={{ width: '100%', height: '520px', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)', backgroundColor: '#f8fafc' }} />
+      </div>
     </div>
   );
 }
