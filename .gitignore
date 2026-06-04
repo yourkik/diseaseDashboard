@@ -27,6 +27,11 @@ backend/env/
 backend/debug_*.py
 backend/test_*.py
 backend/poll_*.py
+backend/find_*.py
+backend/fetch_*.py
+
+# Cache Files
+backend/app/services/kdca_cache.json
 
 # 3. 노드 & 넥스트JS (Frontend)
 # ------------------------------------------------------------------------------
@@ -49,6 +54,8 @@ backend/eda/*.csv
 backend/eda/*.png
 backend/eda/test_out.xml
 *.csv
+*.zip
+*.xlsx
 
 # 5. OS 및 에디터 설정
 # ------------------------------------------------------------------------------
@@ -56,3 +63,7 @@ backend/eda/test_out.xml
 .idea/
 .DS_Store
 Thumbs.db
+
+# 6. 문서 파일 무시
+# ------------------------------------------------------------------------------
+Summary/
