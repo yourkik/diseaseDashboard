@@ -1,0 +1,305 @@
+{
+  "코로나19": {
+    "last_updated": "2026-06-04T10:06:34.377659",
+    "data": [
+      {
+        "name": "서울",
+        "coordinates": [
+          126.978,
+          37.5665
+        ],
+        "cases": 15034,
+        "risk_level": "High",
+        "spread_to": [
+          "경기"
+        ]
+      },
+      {
+        "name": "경기",
+        "coordinates": [
+          127.2089,
+          37.2751
+        ],
+        "cases": null,
+        "risk_level": "Medium",
+        "spread_to": [
+          "서울"
+        ]
+      },
+      {
+        "name": "부산",
+        "coordinates": [
+          129.0756,
+          35.1796
+        ],
+        "cases": null,
+        "risk_level": "Low",
+        "spread_to": []
+      }
+    ]
+  },
+  "독감": {
+    "last_updated": "2026-06-04T10:25:25.369571",
+    "data": [
+      {
+        "name": "서울",
+        "coordinates": [
+          126.978,
+          37.5665
+        ],
+        "cases": null,
+        "risk_level": "High",
+        "spread_to": [
+          "경기",
+          "인천"
+        ]
+      },
+      {
+        "name": "경기",
+        "coordinates": [
+          127.2089,
+          37.2751
+        ],
+        "cases": null,
+        "risk_level": "Medium",
+        "spread_to": [
+          "충청",
+          "서울"
+        ]
+      },
+      {
+        "name": "부산",
+        "coordinates": [
+          129.0756,
+          35.1796
+        ],
+        "cases": null,
+        "risk_level": "Medium",
+        "spread_to": [
+          "울산"
+        ]
+      },
+      {
+        "name": "강원",
+        "coordinates": [
+          128.2266,
+          37.8303
+        ],
+        "cases": null,
+        "risk_level": "High"
+      },
+      {
+        "name": "광주",
+        "coordinates": [
+          126.8514,
+          35.1595
+        ],
+        "cases": null,
+        "risk_level": "High"
+      },
+      {
+        "name": "경상북도",
+        "coordinates": [
+          128.8889,
+          36.4919
+        ],
+        "cases": null,
+        "risk_level": "Low"
+      }
+    ]
+  },
+  "뎅기열": {
+    "last_updated": "2026-06-04T10:33:17.481804",
+    "data": [
+      {
+        "name": "서울",
+        "coordinates": [
+          126.978,
+          37.5665
+        ],
+        "cases": 120,
+        "risk_level": "High",
+        "spread_to": [
+          "경기",
+          "인천"
+        ]
+      },
+      {
+        "name": "경기",
+        "coordinates": [
+          127.2089,
+          37.2751
+        ],
+        "cases": 85,
+        "risk_level": "High",
+        "spread_to": [
+          "서울",
+          "충남"
+        ]
+      },
+      {
+        "name": "부산",
+        "coordinates": [
+          129.0756,
+          35.1796
+        ],
+        "cases": 60,
+        "risk_level": "Medium"
+      },
+      {
+        "name": "인천",
+        "coordinates": [
+          126.7052,
+          37.4563
+        ],
+        "cases": 50,
+        "risk_level": "Medium",
+        "spread_to": [
+          "서울"
+        ]
+      },
+      {
+        "name": "충남",
+        "coordinates": [
+          126.8188,
+          36.5184
+        ],
+        "cases": 40,
+        "risk_level": "Low"
+      }
+    ]
+  },
+  "말라리아": {
+    "last_updated": "2026-06-04T10:33:20.889842",
+    "data": [
+      {
+        "name": "서울",
+        "coordinates": [
+          126.978,
+          37.5665
+        ],
+        "cases": null,
+        "risk_level": "High"
+      },
+      {
+        "name": "경기",
+        "coordinates": [
+          127.2089,
+          37.2751
+        ],
+        "cases": null,
+        "risk_level": "High",
+        "spread_to": [
+          "인천",
+          "강원"
+        ]
+      },
+      {
+        "name": "부산",
+        "coordinates": [
+          129.0756,
+          35.1796
+        ],
+        "cases": null,
+        "risk_level": "Low"
+      },
+      {
+        "name": "인천",
+        "coordinates": [
+          126.7052,
+          37.4563
+        ],
+        "cases": null,
+        "risk_level": "Medium"
+      },
+      {
+        "name": "강원",
+        "coordinates": [
+          128.1555,
+          37.8228
+        ],
+        "cases": null,
+        "risk_level": "Low"
+      }
+    ]
+  },
+  "신증후군출혈열": {
+    "last_updated": "2026-06-04T10:33:27.370818",
+    "data": [
+      {
+        "name": "서울",
+        "coordinates": [
+          126.978,
+          37.5665
+        ],
+        "cases": null,
+        "risk_level": "Medium"
+      },
+      {
+        "name": "경기",
+        "coordinates": [
+          127.2089,
+          37.2751
+        ],
+        "cases": null,
+        "risk_level": "High",
+        "spread_to": [
+          "충남",
+          "전북"
+        ]
+      },
+      {
+        "name": "부산",
+        "coordinates": [
+          129.0756,
+          35.1796
+        ],
+        "cases": null,
+        "risk_level": "Low"
+      },
+      {
+        "name": "충남",
+        "coordinates": [
+          126.9568,
+          36.5184
+        ],
+        "cases": null,
+        "risk_level": "High",
+        "spread_to": [
+          "전남",
+          "경남"
+        ]
+      },
+      {
+        "name": "전북",
+        "coordinates": [
+          127.1088,
+          35.7175
+        ],
+        "cases": null,
+        "risk_level": "High",
+        "spread_to": [
+          "전남"
+        ]
+      },
+      {
+        "name": "전남",
+        "coordinates": [
+          126.4635,
+          34.8162
+        ],
+        "cases": null,
+        "risk_level": "Medium"
+      },
+      {
+        "name": "경남",
+        "coordinates": [
+          128.238,
+          35.459
+        ],
+        "cases": null,
+        "risk_level": "High"
+      }
+    ]
+  }
+}

@@ -16,12 +16,67 @@ const AzureMap = dynamic(() => import("../mapAzure"), {
 });
 
 export default function AzureTestPage() {
+  const [selectedDisease, setSelectedDisease] = React.useState("코로나19");
+  const [debugMode, setDebugMode] = React.useState(false);
+  const [forceUpdateToggle, setForceUpdateToggle] = React.useState(0);
+  
+  const diseases = ["코로나19", "독감", "뎅기열", "말라리아", "신증후군출혈열"];
+
   return (
     <main className="container animate-fade-in">
       <header style={{ marginBottom: '40px', textAlign: 'center' }}>
         <h1 className="title-gradient" style={{ fontSize: '3rem', marginBottom: '16px' }}>우리 동네 감염병 브리핑</h1>
         <p className="subtitle">AI 기반 실시간 뉴스 분석 및 지역 통계 현황 (Azure Maps 빌드)</p>
       </header>
+
+      {/* 컨트롤 패널 (질병 선택 및 디버그) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+        <div className="glass-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3>선택된 질병</h3>
+            <span className="badge success">관찰중</span>
+          </div>
+          <select 
+            value={selectedDisease} 
+            onChange={(e) => setSelectedDisease(e.target.value)}
+            style={{ padding: '12px', borderRadius: '8px', border: '1px solid #475569', fontSize: '1.2rem', backgroundColor: '#1e293b', color: 'white', width: '100%', outline: 'none' }}
+          >
+            {diseases.map(d => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="glass-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3>디버그 및 수동 제어</h3>
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.9rem' }}>
+              <input 
+                type="checkbox" 
+                checked={debugMode} 
+                onChange={(e) => setDebugMode(e.target.checked)} 
+                style={{ marginRight: '8px' }}
+              />
+              디버그 모드 켜기
+            </label>
+          </div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.4' }}>
+            {debugMode ? (
+              <button 
+                onClick={() => setForceUpdateToggle(prev => prev + 1)}
+                style={{
+                  backgroundColor: '#3b82f6', color: 'white', border: 'none', padding: '10px 16px',
+                  borderRadius: '6px', cursor: 'pointer', width: '100%', fontWeight: 'bold'
+                }}
+              >
+                🚀 AI 강제 업데이트 (증분 검색)
+              </button>
+            ) : (
+              <p>디버그 모드를 켜면 AI 에이전트 강제 갱신(Force Update) 버튼이 활성화됩니다.</p>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* 대시보드 통계 카드 지표 영역 (동일 유지) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '40px' }}>
@@ -58,10 +113,10 @@ export default function AzureTestPage() {
 
       {/* 공간 데이터 시각화 영역 */}
       <div style={{ marginBottom: '40px' }}>
-        <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>지역별 감염병 확산 지도</h2>
+        <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>지역별 감염병 확산 지도 ({selectedDisease})</h2>
         <div className="glass-card" style={{ position: 'relative', overflow: 'hidden', padding: '0' }}>
           <div>
-            <AzureMap />
+            <AzureMap disease={selectedDisease} forceUpdateToggle={forceUpdateToggle} />
           </div>
         </div>
       </div>

@@ -52,7 +52,7 @@ def get_disease_contents():
     return data
 
 @app.get("/api/map/disease-spread")
-def get_map_disease_spread(disease: str = "코로나19"):
-    """지도 시각화를 위한 질병 통합 데이터 반환"""
+def get_map_disease_spread(disease: str = "코로나19", force_update: bool = False):
+    """지도 시각화를 위한 질병 통합 데이터 반환 (force_update=true 시 증분 갱신)"""
     from app.services.map_aggregator import get_hybrid_map_data
-    return get_hybrid_map_data(disease)
+    return get_hybrid_map_data(disease, force_update=force_update)

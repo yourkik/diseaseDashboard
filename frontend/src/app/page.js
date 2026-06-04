@@ -23,6 +23,8 @@ const AzureMap = dynamic(() => import("./mapAzure"), {
 
 export default function Home() {
   const [selectedDisease, setSelectedDisease] = useState("코로나19");
+  const [debugMode, setDebugMode] = useState(false);
+  const [forceUpdateToggle, setForceUpdateToggle] = useState(0);
 
   const diseases = ["코로나19", "독감", "뎅기열", "말라리아", "신증후군출혈열"];
 
@@ -63,14 +65,35 @@ export default function Home() {
 
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3>AI 행동 지침</h3>
-            <span className="badge success">안내</span>
+            <h3>디버그 및 수동 제어</h3>
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '0.9rem' }}>
+              <input 
+                type="checkbox" 
+                checked={debugMode} 
+                onChange={(e) => setDebugMode(e.target.checked)} 
+                style={{ marginRight: '8px' }}
+              />
+              디버그 모드 켜기
+            </label>
           </div>
-          <ul style={{ listStylePosition: 'inside', lineHeight: '1.8', color: 'var(--text-muted)' }}>
-            <li><strong style={{ color: 'var(--text-main)' }}>마스크 착용:</strong> 대중교통 및 다중이용시설</li>
-            <li><strong style={{ color: 'var(--text-main)' }}>위생 관리:</strong> 귀가 후 손 씻기 생활화</li>
-            <li><strong style={{ color: 'var(--text-main)' }}>관찰 요망:</strong> 확산 경로에 인접한 지역</li>
-          </ul>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+            {debugMode ? (
+              <>
+                <p style={{ marginBottom: '12px' }}>캐시(Cache)를 무시하고 증분 검색을 강제로 수행합니다.</p>
+                <button 
+                  onClick={() => setForceUpdateToggle(prev => prev + 1)}
+                  style={{
+                    backgroundColor: '#3b82f6', color: 'white', border: 'none', padding: '8px 16px',
+                    borderRadius: '6px', cursor: 'pointer', width: '100%', fontWeight: 'bold'
+                  }}
+                >
+                  🚀 AI 강제 업데이트 (증분 검색)
+                </button>
+              </>
+            ) : (
+              <p>디버그 모드를 켜면 AI 에이전트 강제 갱신(Force Update) 버튼이 활성화됩니다. 일반 모드에서는 빠른 캐시 데이터를 사용합니다.</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -79,7 +102,7 @@ export default function Home() {
 
         <div className="glass-card" style={{ position: 'relative', overflow: 'hidden', padding: '0' }}>
           <div>
-            <AzureMap disease={selectedDisease} />
+            <AzureMap disease={selectedDisease} forceUpdateToggle={forceUpdateToggle} />
           </div>
         </div>
       </div>
