@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import InfectionMap from '@/components/InfectionMap';
+import NewsPanel from '@/components/NewsPanel';
 import './mapStyles.css';
 
 export default function MapTestPage() {
   const [selectedDisease, setSelectedDisease] = useState('수두');
-  const diseases = ['수두', '백일해', '유행성이하선염', '코로나19', '에볼라바이러스병'];
+  const diseases = ['수두', '백일해', '유행성이하선염', '코로나19', '에볼라', '한타바이러스'];
 
   return (
     <div className="pageContainer">
@@ -27,8 +28,19 @@ export default function MapTestPage() {
           ))}
         </div>
 
-        <div style={{ marginTop: '2rem' }}>
-          <InfectionMap diseaseName={selectedDisease} />
+        <div style={{ 
+          marginTop: '2rem', 
+          display: 'grid', 
+          gridTemplateColumns: '2fr 1fr', 
+          gap: '24px',
+          alignItems: 'start'
+        }}>
+          <div style={{ height: '700px' }}>
+            <InfectionMap diseaseName={selectedDisease} />
+          </div>
+          <div style={{ height: '700px' }}>
+            <NewsPanel diseaseName={selectedDisease} />
+          </div>
         </div>
       </div>
     </div>

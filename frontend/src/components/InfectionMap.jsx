@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ComposableMap, Geographies, Geography, Line, Marker } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, Line, Marker, ZoomableGroup } from 'react-simple-maps';
 import { scaleLinear } from 'd3-scale';
 import { AlertTriangle } from 'lucide-react';
 import '../app/map-test/mapStyles.css';
 
 const KOREA_TOPO_JSON = '/korea-topo.json';
+const CONGO_TOPO_JSON = '/congo-topo.json';
 
 const colorScale = scaleLinear()
   .domain([0, 10, 50, 100])
@@ -35,8 +36,14 @@ const REGION_COORDS = {
 
 export default function InfectionMap({ diseaseName }) {
   const [aggregatedData, setAggregatedData] = useState({});
+  const [rawData, setRawData] = useState({});
   const [loading, setLoading] = useState(true);
   const [tooltipData, setTooltipData] = useState(null);
+
+  const isEbola = diseaseName === '에볼라';
+  const currentGeoUrl = isEbola ? CONGO_TOPO_JSON : KOREA_TOPO_JSON;
+  const currentCenter = isEbola ? [23.5, -2.5] : [127.5, 36];
+  const currentScale = isEbola ? 2000 : 5500;
 
   // 데이터 Fetching 및 연간 총합 집계
   useEffect(() => {
@@ -51,12 +58,15 @@ export default function InfectionMap({ diseaseName }) {
         
         // /status 응답 포맷: { "서울": { "region": "서울", "count": 1477, "rate": 15.6 }, ... }
         const totals = {};
+        const rawMap = {};
         Object.values(data).forEach(item => {
-          let region = item.region.substring(0, 2); 
+          let region = isEbola ? item.region : item.region.substring(0, 2); 
           totals[region] = item.count;
+          rawMap[region] = item;
         });
         
         setAggregatedData(totals);
+        setRawData(rawMap);
       } catch (err) {
         console.error("Failed to fetch map data", err);
       } finally {
@@ -101,7 +111,7 @@ export default function InfectionMap({ diseaseName }) {
         </div>
         <div className="periodBadge">
           <AlertTriangle color="#fbbf24" size={20} />
-          <span>2023년 누적 데이터</span>
+          <span>{isEbola ? "HDX 글로벌 데이터 (2026년)" : "2023년 누적 데이터"}</span>
         </div>
       </div>
 
@@ -109,17 +119,32 @@ export default function InfectionMap({ diseaseName }) {
         {loading ? (
           <div style={{ color: '#2dd4bf', fontWeight: 'bold' }}>데이터를 불러오는 중입니다...</div>
         ) : (
-          <ComposableMap
+          <>
+            {Object.keys(aggregatedData).length > 0 && Object.values(aggregatedData).every(v => v === 0) && (
+              <div style={{
+                position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
+                backgroundColor: 'rgba(239, 68, 68, 0.9)', color: 'white', padding: '10px 20px',
+                borderRadius: '8px', fontWeight: 'bold', zIndex: 10, boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+                border: '1px solid #fca5a5'
+              }}>
+                🚫 현재 데이터 기준 국내 감염자 없음 (0명)
+              </div>
+            )}
+            <ComposableMap
             projection="geoMercator"
-            projectionConfig={{ scale: 5500, center: [127.5, 36] }}
+            projectionConfig={{ scale: currentScale, center: currentCenter }}
             style={{ width: "100%", height: "100%" }}
           >
-            <Geographies geography={KOREA_TOPO_JSON}>
+            <ZoomableGroup zoom={1}>
+            <Geographies geography={currentGeoUrl}>
               {({ geographies }) =>
                 geographies.map(geo => {
-                  const rawName = geo.properties.name || geo.properties.CTP_KOR_NM || geo.properties.CTPRVN_NM;
-                  const regionName = normalizeRegion(rawName);
+                  const rawName = isEbola 
+                    ? geo.properties.shapeName 
+                    : (geo.properties.name || geo.properties.CTP_KOR_NM || geo.properties.CTPRVN_NM);
+                  const regionName = isEbola ? rawName : normalizeRegion(rawName);
                   const count = aggregatedData[regionName] || 0;
+                  const detail = rawData[regionName] || {};
                   
                   return (
                     <Geography
@@ -137,6 +162,8 @@ export default function InfectionMap({ diseaseName }) {
                         setTooltipData({
                           region: rawName,
                           count: count,
+                          deaths: detail.deaths || 0,
+                          isEbola: isEbola,
                           x: e.clientX,
                           y: e.clientY
                         });
@@ -197,7 +224,9 @@ export default function InfectionMap({ diseaseName }) {
               </Marker>
             ))}
 
+            </ZoomableGroup>
           </ComposableMap>
+          </>
         )}
       </div>
 
@@ -209,7 +238,16 @@ export default function InfectionMap({ diseaseName }) {
         >
           <div className="tooltipRegion">{tooltipData.region}</div>
           <div className="tooltipCount">
-            누적 확진자: <span>{tooltipData.count.toLocaleString()}명</span>
+            {tooltipData.count === 0 ? (
+              <span style={{ color: '#94a3b8' }}>감염자 없음</span>
+            ) : (
+              <>
+                누적 확진자: <span>{tooltipData.count.toLocaleString()}명</span>
+                {tooltipData.isEbola && (
+                  <><br/>의심/사망: <span style={{color: '#ef4444'}}>{tooltipData.deaths.toLocaleString()}명</span></>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}

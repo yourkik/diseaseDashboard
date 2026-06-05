@@ -5,7 +5,7 @@ import os
 
 # 서비스 레이어 임포트
 from app.services.ingestion import fetch_kdca_stats, get_integrated_news, fetch_kdca_disease_contents
-from app.routers import disease_stats
+from app.routers import disease_stats, news
 
 # .env 환경변수 로드
 load_dotenv()
@@ -27,6 +27,7 @@ app.add_middleware(
 
 # 라우터 등록
 app.include_router(disease_stats.router)
+app.include_router(news.router)
 
 @app.get("/")
 def read_root():
