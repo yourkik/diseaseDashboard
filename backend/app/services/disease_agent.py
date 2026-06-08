@@ -1,53 +1,76 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
 from azure.ai.agents.models import BingGroundingTool
 
-load_dotenv()
+env_path = Path(__file__).parent.parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 PROJECT_ENDPOINT = os.getenv("PROJECT_ENDPOINT")
 AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
 BING_CONNECTION_NAME = os.getenv("BING_CONNECTION_NAME")
 
-def analyze_disease_risk_with_grounding(disease_keyword="?낃컧"):
+def analyze_disease_risk_with_grounding(disease_keyword="독감"):
     if not PROJECT_ENDPOINT:
-        return {"error": "Azure ?뚮씪誘명꽣媛 ?ㅼ젙?섏? ?딆븯?듬땲?? (.env ?뺤씤)"}
+        return {"error": "Azure 파라미터가 설정되지 않았습니다 (.env 확인)"}
         
     try:
-        # AI Foundry v2 SDK: Connection String ?먮뒗 Endpoint URL??endpoint ?뚮씪誘명꽣???섍퉩?덈떎.
+        # AI Foundry v2 SDK: Connection String 또는 Endpoint URL을 endpoint 파라미터에 넣습니다.
         project_client = AIProjectClient(
             endpoint=PROJECT_ENDPOINT,
             credential=DefaultAzureCredential()
         )
         
-        # 鍮?寃???곌껐 媛?몄삤湲?        bing_connection = project_client.connections.get(BING_CONNECTION_NAME)
+        # 빙 검색 연결 가져오기
+        bing_connection = project_client.connections.get(BING_CONNECTION_NAME)
         conn_id = bing_connection.id
         
-        # ?먯씠?꾪듃 ?앹꽦
+        # 에이전트 생성
         agent = project_client.agents.create_agent(
             model=AZURE_OPENAI_DEPLOYMENT_NAME,
             name="sentinel-disease-analyzer",
-            instructions="?뱀떊? 媛먯뿼蹂???쒕낫?쒖쓽 ?ㅼ떆媛??꾪뿕??遺꾩꽍 AI?낅땲?? ??寃???꾧뎄瑜??곴레 ?쒖슜?섏뿬 理쒖떊 ?댁뒪瑜?湲곕컲?쇰줈 ?꾪뿕?꾨? 遺꾩꽍??二쇱꽭?? ?듬??먮뒗 諛섎뱶??異쒖쿂瑜??ы븿?댁빞 ?⑸땲??",
+            instructions="당신은 언론 보도 데이터를 분석하여 객관적인 동향(Trend) 통계를 추출하는 데이터 사이언티스트 AI입니다. 대시보드 시각화를 위해 기사 본문에 언급된 통계적 팩트(수치, 발표 내용)만 있는 그대로 요약하세요. 답변은 반드시 출처를 포함해야 하며, 프론트엔드에서 직접 렌더링할 수 있도록 Markdown 대신 기본 HTML 태그(<h3>, <ul>, <li>, <p>, <strong>)만 사용하여 구조화해 주세요.",
             tools=BingGroundingTool(connection_id=conn_id).definitions
         )
         
-        # ?곕젅??諛?硫붿떆吏 ?앹꽦
+        # 스레드 및 메시지 생성
         thread = project_client.agents.threads.create()
+        
+        prompt = f'''
+당신은 통계 분석 봇입니다. 최신 뉴스를 검색하여 한국의 '{disease_keyword}' 관련 동향을 아래 3가지 항목으로 구조화하여 추출해 주세요.
+
+주의: 주관적인 해석이나 조언을 절대 추가하지 마세요. 오직 언론에 보도된 숫자, 발표된 팩트, 공식 기관의 안내사항만 그대로 요약해야 합니다.
+
+1. 최근 언론 보도 요약 (최근 확진자 수 변화, 주요 발생 지역 등 기사에 보도된 팩트)
+2. 기사에 나타난 주요 동향 (사회적/집단 감염 여부 등 동향)
+3. 보도된 방역 당국의 당부사항 (기사에서 안내하는 보건 권고사항)
+
+응답은 반드시 아래와 같은 HTML 구조로만 작성해 주세요 (마크다운 ```html 등을 쓰지 말고 순수 HTML 태그만 반환할 것):
+<h3>📈 최근 언론 보도 요약</h3>
+<p>...</p>
+<h3>📰 기사에 나타난 주요 동향</h3>
+<p>...</p>
+<h3>📢 보도된 방역 당국의 당부사항</h3>
+<ul>
+  <li>...</li>
+</ul>
+'''
         message = project_client.agents.messages.create(
             thread_id=thread.id,
             role="user",
-            content=f"理쒓렐 ?쒓뎅??{disease_keyword} ?좏뻾 愿??理쒖떊 ?댁뒪瑜?李얠븘蹂닿퀬 ?꾪뿕?꾨? 遺꾩꽍????由ы룷?몃? ?묒꽦?댁쨾."
+            content=prompt
         )
         
-        # ?먯씠?꾪듃 ?ㅽ뻾
+        # 에이전트 실행
         run = project_client.agents.runs.create_and_process(
             thread_id=thread.id, 
             agent_id=agent.id
         )
         
         if run.status == "failed":
-            return {"error": f"Agent ?ㅽ뻾 ?ㅽ뙣: {run.last_error}"}
+            return {"error": f"Agent 실행 실패: {run.last_error}"}
             
         messages_list = list(project_client.agents.messages.list(thread_id=thread.id))
         latest_msg = messages_list[0]
@@ -85,6 +108,7 @@ def get_disease_map_data_from_agent(disease_keyword, base_data_str="", last_upda
             credential=DefaultAzureCredential()
         )
         
+        # 빙 검색 연결 가져오기
         bing_connection = project_client.connections.get(BING_CONNECTION_NAME)
         conn_id = bing_connection.id
         

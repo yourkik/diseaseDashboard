@@ -1,19 +1,29 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
 # 서비스 레이어 임포트
 from app.services.ingestion import fetch_kdca_stats, get_integrated_news, fetch_kdca_disease_contents
-from app.routers import disease_stats, news
+from app.routers import disease_stats, ai_insights
 
 # .env 환경변수 로드
 load_dotenv()
 
+from app.services.scheduler import start_scheduler, stop_scheduler
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
+    stop_scheduler()
+
 app = FastAPI(
     title="Disease Dashboard API",
     description="감염병 수집, RAG 전처리 및 프론트엔드 서빙을 위한 백엔드 API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # 프론트엔드(Next.js) 연동을 위한 CORS 설정 추가
@@ -27,7 +37,7 @@ app.add_middleware(
 
 # 라우터 등록
 app.include_router(disease_stats.router)
-app.include_router(news.router)
+app.include_router(ai_insights.router)
 
 @app.get("/")
 def read_root():
@@ -44,11 +54,7 @@ def get_disease_stats():
     data = fetch_kdca_stats()
     return data
 
-@app.get("/api/data/news")
-def get_disease_news():
-    """Bing API 및 GDELT API 기반 감염병 통합 뉴스 반환"""
-    data = get_integrated_news()
-    return data
+
 
 @app.get("/api/data/contents")
 def get_disease_contents():

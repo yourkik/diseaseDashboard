@@ -22,6 +22,7 @@ env/
 myenv/
 backend/venv/
 backend/env/
+backend/myenv/
 
 # Test & Debug Scripts
 backend/debug_*.py
@@ -66,4 +67,4 @@ Thumbs.db
 
 # 6. 문서 파일 무시
 # ------------------------------------------------------------------------------
-Summary/
+# Summary/ (GitHub 업로드를 위해 주석 처리)

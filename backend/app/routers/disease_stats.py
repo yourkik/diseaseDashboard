@@ -65,7 +65,8 @@ def get_map_status(disease: str, year: Optional[str] = None):
                 sido = item.get("sidoNm")
                 result[sido] = {
                     "region": sido,
-                    "count": safe_int(item.get("resultVal", 0))
+                    "count": safe_int(item.get("resultVal", 0)),
+                    "period": item.get("stdDay", f"{year}년 누적 데이터") # 코로나 API의 기준일자나 기본 연도 문자열 전달
                 }
                 
         for item in rate_items:

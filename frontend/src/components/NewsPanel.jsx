@@ -55,8 +55,10 @@ export default function NewsPanel({ diseaseName }) {
       
       <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>
-            뉴스를 분석 중입니다...
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8', lineHeight: '1.6' }}>
+            <div style={{ fontSize: '1.2rem', marginBottom: '8px', color: '#38bdf8' }}>AI 에이전트 구동 중...</div>
+            질병 관련 최신 문서를 수집 및 분석하고 있습니다.<br/>
+            (최초 로딩 시 최대 15초가 소요될 수 있습니다)
           </div>
         ) : error ? (
           <div style={{ textAlign: 'center', padding: '20px', color: '#ef4444' }}>

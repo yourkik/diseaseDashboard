@@ -51,7 +51,8 @@ export default function InfectionMap({ diseaseName }) {
       setLoading(true);
       try {
         // 정적 지도이므로 월별 가짜 데이터(/spread) 대신 실제 연간 지역 데이터(/status) 호출
-        const res = await fetch(`http://localhost:8000/api/stats/map/status?disease=${diseaseName}&year=2023`);
+        // 백엔드에서 기본값으로 최신 연도(올해) 데이터를 불러옵니다.
+        const res = await fetch(`http://localhost:8000/api/stats/map/status?disease=${diseaseName}`);
         if (!res.ok) throw new Error("Backend server error");
         
         const data = await res.json();
@@ -100,6 +101,18 @@ export default function InfectionMap({ diseaseName }) {
     return name.substring(0, 2);
   };
 
+  let periodDisplay = isEbola ? "HDX 글로벌 데이터 (2026년)" : "데이터 로드 중...";
+  if (!isEbola && Object.keys(rawData).length > 0) {
+    const firstItem = Object.values(rawData)[0];
+    if (firstItem.period) {
+      periodDisplay = firstItem.period.includes("누적 데이터") 
+        ? firstItem.period 
+        : `${firstItem.period} 기준 데이터`;
+    } else {
+      periodDisplay = "최신 누적 데이터";
+    }
+  }
+
   return (
     <div className="mapContainer">
       <div className="mapHeader">
@@ -111,7 +124,7 @@ export default function InfectionMap({ diseaseName }) {
         </div>
         <div className="periodBadge">
           <AlertTriangle color="#fbbf24" size={20} />
-          <span>{isEbola ? "HDX 글로벌 데이터 (2026년)" : "2023년 누적 데이터"}</span>
+          <span>{periodDisplay}</span>
         </div>
       </div>
 

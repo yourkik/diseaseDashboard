@@ -21,11 +21,15 @@ KDCA_API_KEY = os.getenv("KDCA_API_KEY")
 KDCA_CONTENT_TOKEN = os.getenv("KDCA_CONTENT_TOKEN")
 BING_SEARCH_API_KEY = os.getenv("BING_SEARCH_API_KEY")
 
+COVID_ENCODING = os.getenv("COVID_Encoding")
+COVID_DECODING = os.getenv("COVID_Decoding")
+
 def fetch_kdca_stats():
     """
     공공데이터포털(질병관리청) 코로나19/감염병 발생 동향 API 호출
     """
-    if not KDCA_API_KEY or KDCA_API_KEY == "your_kdca_api_key_here":
+    # requests 라이브러리의 params 인자를 사용할 경우, 자동으로 URL 인코딩이 수행되므로 Decoding 키를 사용합니다.
+    if not COVID_DECODING or COVID_DECODING == "your_kdca_api_key_here":
         # API Key가 없을 경우 Mock Data 반환 (개발 편의용)
         return {
             "resultCode": "00",
@@ -36,7 +40,7 @@ def fetch_kdca_stats():
         }
         
     url = "http://apis.data.go.kr/1352000/ODMS_COVID_04/callCovid04Api"
-    params = {'serviceKey': KDCA_API_KEY, 'pageNo': '1', 'numOfRows': '10', 'apiType': 'JSON'}
+    params = {'serviceKey': COVID_DECODING, 'pageNo': '1', 'numOfRows': '10', 'apiType': 'JSON'}
     response = requests.get(url, params=params)
     response.raise_for_status()
     return response.json()
@@ -114,14 +118,10 @@ def get_integrated_news(query="감염병 OR 코로나 OR 독감", gdelt_query="d
     gdelt_data = fetch_gdelt_news(gdelt_query)
     news_results.extend(gdelt_data.get("value", []))
     
-    # 만약 둘 다 실패해서 결과가 0개라면 Mock Data 반환
+    # 만약 둘 다 실패해서 결과가 0개라면 아무것도 반환하지 않음 (Mock 반환 제거)
     if not news_results:
-        print("모든 API 수집 실패, Mock Data를 반환합니다.")
-        return {
-            "value": [
-                {"name": "[모의] 올 겨울 독감 유행 조짐...", "description": "전국적으로 독감 환자 급증.", "source": "Mock"}
-            ]
-        }
+        print("모든 API 수집 실패, 빈 데이터를 반환합니다.")
+        return {"value": []}
         
     return {"value": news_results[:15]} # 최대 15개 최신 기사 반환
 

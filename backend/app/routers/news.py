@@ -1,34 +1,46 @@
 from fastapi import APIRouter, HTTPException
-from app.services.ingestion import get_integrated_news
+from app.services.disease_agent import analyze_disease_risk_with_grounding
+from app.services.cache_manager import get_news_cache, update_news_cache
 
 router = APIRouter(prefix="/api/news", tags=["News"])
 
 @router.get("/")
 def get_disease_news(disease: str):
     """
-    특정 질병에 대한 최신 뉴스(Bing Search API 기반)를 가져옵니다.
+    LLM(Azure AI Agent)의 답변을 생성할 때 참고한 문서(Citations) 데이터를 추출하여 뉴스 피드로 제공합니다.
+    속도 개선을 위해 캐싱을 사용합니다.
     """
     try:
-        # 뉴스 검색 쿼리: 질병명 + 관련 키워드
-        query = f"{disease} (감염 OR 바이러스 OR 확진 OR 예방)"
-        gdelt_query = f"{disease} OR virus OR disease"
+        # 1. 캐시 확인
+        cached = get_news_cache(disease)
+        if cached and "data" in cached:
+            # 캐시가 있으면 즉시 반환
+            return cached["data"]
+            
+        # 2. 캐시가 없으면 LLM 호출 (약 10~15초 소요)
+        agent_result = analyze_disease_risk_with_grounding(disease_keyword=disease)
         
-        # ingestion.py의 get_integrated_news 함수를 활용하여 Bing 실패 시 GDELT로 Fallback
-        news_data = get_integrated_news(query=query, gdelt_query=gdelt_query)
+        if "error" in agent_result:
+            # 에러 발생 시 빈 배열 반환하여 프론트엔드가 죽지 않게 처리
+            return []
+            
+        citations = agent_result.get("citations", [])
         
-        news_items = news_data.get("value", [])
-        
-        # 프론트엔드에서 쓰기 편하게 데이터 정제
+        # 3. 프론트엔드 포맷에 맞게 변환
         formatted_news = []
-        for item in news_items:
+        for citation in citations:
             formatted_news.append({
-                "title": item.get("name"),
-                "url": item.get("url"),
-                "description": item.get("description"),
-                "source": item.get("provider", [{}])[0].get("name", "Bing News"),
-                "date": item.get("datePublished")
+                "title": citation.get("title", "관련 문서"),
+                "url": citation.get("url", "#"),
+                "description": "AI 에이전트가 답변을 위해 참고한 핵심 문서입니다.",
+                "source": "AI Grounding Search",
+                "date": "최신"
             })
             
+        # 4. 캐시 저장
+        update_news_cache(disease, formatted_news)
+        
         return formatted_news
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

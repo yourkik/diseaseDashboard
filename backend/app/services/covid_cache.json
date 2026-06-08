@@ -1,0 +1,308 @@
+{
+  "covid_region_status_2023": {
+    "timestamp": 1780890364.516888,
+    "data": {
+      "response": {
+        "body": {
+          "items": {
+            "item": [
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "경기",
+                "resultVal": "23409",
+                "stdDay": "2021-02-27"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "00",
+                "sidoNm": "합계",
+                "resultVal": "2022",
+                "stdDay": "2020-02-28"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "제주",
+                "resultVal": "63",
+                "stdDay": "2020-11-18"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "전남",
+                "resultVal": "20",
+                "stdDay": "2020-06-06"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "경기",
+                "resultVal": "7592942",
+                "stdDay": "2022-12-16"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "광주",
+                "resultVal": "509",
+                "stdDay": "2020-10-26"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "인천",
+                "resultVal": "706346",
+                "stdDay": "2022-03-25"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "충북",
+                "resultVal": "7739",
+                "stdDay": "2021-10-27"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "전북",
+                "resultVal": "2311",
+                "stdDay": "2021-06-18"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "충북",
+                "resultVal": "978425",
+                "stdDay": "2023-05-02"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "인천",
+                "resultVal": "634945",
+                "stdDay": "2022-03-22"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "경북",
+                "resultVal": "1386490",
+                "stdDay": "2023-02-09"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "대전",
+                "resultVal": "0",
+                "stdDay": "2020-02-17"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "서울",
+                "resultVal": "4346524",
+                "stdDay": "2022-08-18"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "00",
+                "sidoNm": "합계",
+                "resultVal": "29363272",
+                "stdDay": "2023-01-05"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "울산",
+                "resultVal": "59",
+                "stdDay": "2020-07-31"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "부산",
+                "resultVal": "12502",
+                "stdDay": "2021-09-25"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "강원",
+                "resultVal": "69333",
+                "stdDay": "2022-03-02"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "경남",
+                "resultVal": "4728",
+                "stdDay": "2021-06-02"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "제주",
+                "resultVal": "216320",
+                "stdDay": "2022-04-23"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "covid_region_status_2026": {
+    "timestamp": 1780896293.912586,
+    "data": {
+      "response": {
+        "body": {
+          "items": {
+            "item": [
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "경기",
+                "resultVal": "23409",
+                "stdDay": "2021-02-27"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "00",
+                "sidoNm": "합계",
+                "resultVal": "2022",
+                "stdDay": "2020-02-28"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "제주",
+                "resultVal": "63",
+                "stdDay": "2020-11-18"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "전남",
+                "resultVal": "20",
+                "stdDay": "2020-06-06"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "경기",
+                "resultVal": "7592942",
+                "stdDay": "2022-12-16"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "광주",
+                "resultVal": "509",
+                "stdDay": "2020-10-26"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "인천",
+                "resultVal": "706346",
+                "stdDay": "2022-03-25"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "충북",
+                "resultVal": "7739",
+                "stdDay": "2021-10-27"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "전북",
+                "resultVal": "2311",
+                "stdDay": "2021-06-18"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "충북",
+                "resultVal": "978425",
+                "stdDay": "2023-05-02"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "인천",
+                "resultVal": "634945",
+                "stdDay": "2022-03-22"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "경북",
+                "resultVal": "1386490",
+                "stdDay": "2023-02-09"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "대전",
+                "resultVal": "0",
+                "stdDay": "2020-02-17"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "서울",
+                "resultVal": "4346524",
+                "stdDay": "2022-08-18"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "00",
+                "sidoNm": "합계",
+                "resultVal": "29363272",
+                "stdDay": "2023-01-05"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "울산",
+                "resultVal": "59",
+                "stdDay": "2020-07-31"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "부산",
+                "resultVal": "12502",
+                "stdDay": "2021-09-25"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "강원",
+                "resultVal": "69333",
+                "stdDay": "2022-03-02"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "경남",
+                "resultVal": "4728",
+                "stdDay": "2021-06-02"
+              },
+              {
+                "icdNm": "코로나바이러스감염증-19",
+                "sidoCd": "11",
+                "sidoNm": "제주",
+                "resultVal": "216320",
+                "stdDay": "2022-04-23"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
