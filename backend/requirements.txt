@@ -12,7 +12,3 @@ gunicorn==22.0.0
 azure-identity==1.19.0
 
 # EDA & Data Science
-pandas
-matplotlib
-seaborn
-jupyter
