@@ -64,6 +64,8 @@ backend/eda/test_out.xml
 .idea/
 .DS_Store
 Thumbs.db
+mylogs/
+mylogs.zip
 
 # 6. 문서 파일 무시
 # ------------------------------------------------------------------------------
