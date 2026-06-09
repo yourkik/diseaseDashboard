@@ -25,4 +25,4 @@ jobs:
           action: "upload"
           app_location: "/frontend" 
           api_location: ""
-          output_location: "" # Next.js SSR의 경우 비워둡니다 (Oryx가 자동 빌드 처리)
+          output_location: "out" # Next.js의 output: 'export' 빌드 결과물 위치
