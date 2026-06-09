@@ -5,7 +5,7 @@ import re
 
 router = APIRouter(prefix="/api/insights", tags=["Insights"])
 
-@router.get("/")
+@router.get("")
 def get_disease_insights(disease: str, force_refresh: bool = False):
     """
     LLM(Azure AI Agent)을 사용하여 질병 확산 동향, 위험도, 예방 수칙을 포함하는 종합 리포트(HTML)와 참고 문헌(Citations)을 반환합니다.

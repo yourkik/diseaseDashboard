@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint"
   },
+
   "dependencies": {
     "d3-scale": "^4.0.2",
     "lucide-react": "^1.17.0",
