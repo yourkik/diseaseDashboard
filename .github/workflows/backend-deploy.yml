@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: disease-dashboard-api # Azure 포털에서 생성할 App Service 이름
+  AZURE_WEBAPP_NAME: disease-dashboard-web # 사용자님이 생성하신 실제 App Service 이름
   PYTHON_VERSION: '3.12'
 
 jobs:
