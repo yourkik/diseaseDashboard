@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, Line, Marker, ZoomableGroup } from 'react-simple-maps';
 import { scaleLinear } from 'd3-scale';
 import { AlertTriangle } from 'lucide-react';
-import '../app/map-test/mapStyles.css';
+import './mapStyles.css';
 
 const KOREA_TOPO_JSON = '/korea-topo.json';
 const CONGO_TOPO_JSON = '/congo-topo.json';

@@ -11,34 +11,25 @@ load_dotenv(dotenv_path=env_path)
 PROJECT_ENDPOINT = os.getenv("PROJECT_ENDPOINT")
 AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
 BING_CONNECTION_NAME = os.getenv("BING_CONNECTION_NAME")
+DISEASE_ANALYZER_AGENT_ID = os.getenv("DISEASE_ANALYZER_AGENT_ID")
+MAP_ANALYZER_AGENT_ID = os.getenv("MAP_ANALYZER_AGENT_ID")
 
 def analyze_disease_risk_with_grounding(disease_keyword="독감"):
     if not PROJECT_ENDPOINT:
         return {"error": "Azure 파라미터가 설정되지 않았습니다 (.env 확인)"}
         
     try:
-        # AI Foundry v2 SDK: Connection String 또는 Endpoint URL을 endpoint 파라미터에 넣습니다.
         project_client = AIProjectClient(
             endpoint=PROJECT_ENDPOINT,
             credential=DefaultAzureCredential()
         )
         
-        # 빙 검색 연결 가져오기
-        bing_connection = project_client.connections.get(BING_CONNECTION_NAME)
-        conn_id = bing_connection.id
+        if not DISEASE_ANALYZER_AGENT_ID:
+            return {"error": "DISEASE_ANALYZER_AGENT_ID 환경변수가 없습니다."}
         
-        # 에이전트 생성
-        agent = project_client.agents.create_agent(
-            model=AZURE_OPENAI_DEPLOYMENT_NAME,
-            name="sentinel-disease-analyzer",
-            instructions="당신은 언론 보도 데이터를 분석하여 객관적인 동향(Trend) 통계를 추출하는 데이터 사이언티스트 AI입니다. 대시보드 시각화를 위해 기사 본문에 언급된 통계적 팩트(수치, 발표 내용)만 있는 그대로 요약하세요. 답변은 반드시 출처를 포함해야 하며, 프론트엔드에서 직접 렌더링할 수 있도록 Markdown 대신 기본 HTML 태그(<h3>, <ul>, <li>, <p>, <strong>)만 사용하여 구조화해 주세요.",
-            tools=BingGroundingTool(connection_id=conn_id).definitions
-        )
-        
-        # 스레드 및 메시지 생성
         thread = project_client.agents.threads.create()
         
-        prompt = f'''
+        prompt = f"""
 당신은 통계 분석 봇입니다. 최신 뉴스를 검색하여 한국의 '{disease_keyword}' 관련 동향을 아래 3가지 항목으로 구조화하여 추출해 주세요.
 
 주의: 주관적인 해석이나 조언을 절대 추가하지 마세요. 오직 언론에 보도된 숫자, 발표된 팩트, 공식 기관의 안내사항만 그대로 요약해야 합니다.
@@ -56,17 +47,16 @@ def analyze_disease_risk_with_grounding(disease_keyword="독감"):
 <ul>
   <li>...</li>
 </ul>
-'''
+"""
         message = project_client.agents.messages.create(
             thread_id=thread.id,
             role="user",
             content=prompt
         )
         
-        # 에이전트 실행
         run = project_client.agents.runs.create_and_process(
             thread_id=thread.id, 
-            agent_id=agent.id
+            agent_id=DISEASE_ANALYZER_AGENT_ID
         )
         
         if run.status == "failed":
@@ -89,6 +79,11 @@ def analyze_disease_risk_with_grounding(disease_keyword="독감"):
                                 "title": getattr(annotation.url_citation, "title", "")
                             })
                             
+        try:
+            project_client.agents.threads.delete(thread.id)
+        except Exception:
+            pass
+
         return {
             "ai_analysis": content_text,
             "citations": citations
@@ -108,20 +103,11 @@ def get_disease_map_data_from_agent(disease_keyword, base_data_str="", last_upda
             credential=DefaultAzureCredential()
         )
         
-        # 빙 검색 연결 가져오기
-        bing_connection = project_client.connections.get(BING_CONNECTION_NAME)
-        conn_id = bing_connection.id
-        
-        agent = project_client.agents.create_agent(
-            model=AZURE_OPENAI_DEPLOYMENT_NAME,
-            name="sentinel-map-analyzer",
-            instructions="당신은 감염병 대시보드 지도 시각화용 데이터를 생성하는 AI입니다. 검색 결과와 사용자 제공 데이터를 종합하여 반드시 JSON 배열 형식으로만 응답하세요. 백틱(```)이나 추가 텍스트 없이 오직 유효한 JSON 배열만 출력해야 합니다.",
-            tools=BingGroundingTool(connection_id=conn_id).definitions
-        )
+        if not MAP_ANALYZER_AGENT_ID:
+            return {"error": "MAP_ANALYZER_AGENT_ID 환경변수가 없습니다."}
         
         thread = project_client.agents.threads.create()
         
-        # 이전 데이터 유무에 따른 동적 프롬프트 생성
         incremental_prompt = ""
         if last_updated and previous_data:
             incremental_prompt = f"""
@@ -164,7 +150,7 @@ def get_disease_map_data_from_agent(disease_keyword, base_data_str="", last_upda
         
         run = project_client.agents.runs.create_and_process(
             thread_id=thread.id, 
-            agent_id=agent.id
+            agent_id=MAP_ANALYZER_AGENT_ID
         )
         
         if run.status == "failed":
@@ -178,7 +164,6 @@ def get_disease_map_data_from_agent(disease_keyword, base_data_str="", last_upda
             if hasattr(content_item, "text") and content_item.type == "text":
                 content_text += content_item.text.value
                 
-        # 파싱 (백틱 제거 등)
         content_text = content_text.strip()
         if content_text.startswith("`json"):
             content_text = content_text[7:]
@@ -187,6 +172,11 @@ def get_disease_map_data_from_agent(disease_keyword, base_data_str="", last_upda
         if content_text.endswith("`"):
             content_text = content_text[:-3]
             
+        try:
+            project_client.agents.threads.delete(thread.id)
+        except Exception:
+            pass
+
         return json.loads(content_text.strip())
         
     except Exception as e:

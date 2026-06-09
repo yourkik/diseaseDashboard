@@ -93,7 +93,7 @@ def get_map_spread(disease: str, year: Optional[str] = None, period_type: str = 
         else:
             current_year = int(year)
             
-        # 에볼라的分기: 확산 추이는 현재 JSON에 월별 시계열이 부족하므로 빈 딕셔너리 반환
+        # 에볼라 분기: 확산 추이는 현재 JSON에 월별 시계열이 부족하므로 빈 딕셔너리 반환
         if api_disease_name == "에볼라바이러스병":
             return {}
 

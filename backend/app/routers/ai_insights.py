@@ -6,19 +6,20 @@ import re
 router = APIRouter(prefix="/api/insights", tags=["Insights"])
 
 @router.get("/")
-def get_disease_insights(disease: str):
+def get_disease_insights(disease: str, force_refresh: bool = False):
     """
     LLM(Azure AI Agent)을 사용하여 질병 확산 동향, 위험도, 예방 수칙을 포함하는 종합 리포트(HTML)와 참고 문헌(Citations)을 반환합니다.
     """
     try:
         # 1. 캐시 확인
-        cached = get_insights_cache(disease)
-        if cached and "data" in cached:
-            result = cached["data"]
-            result["last_updated"] = cached.get("last_updated")
-            return result
+        if not force_refresh:
+            cached = get_insights_cache(disease)
+            if cached and "data" in cached:
+                result = cached["data"]
+                result["last_updated"] = cached.get("last_updated")
+                return result
             
-        # 2. 캐시가 없으면 LLM 호출 (약 15초 소요)
+        # 2. 캐시가 없거나 강제 새로고침이면 LLM 호출 (약 15초 소요)
         agent_result = analyze_disease_risk_with_grounding(disease_keyword=disease)
         
         if "error" in agent_result:

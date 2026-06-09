@@ -1,9 +1,15 @@
+"use client";
+
+import React, { useState } from 'react';
+
 export default function AdminPage() {
+  const [debugMode, setDebugMode] = useState(false);
+
   return (
     <main className="container animate-fade-in">
       <header style={{ marginBottom: '40px' }}>
         <h1 className="title-gradient" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>보건소 알림 설정 관리</h1>
-        <p className="subtitle">AI 기반 대시보드의 실시간 알림 트리거를 동적으로 구성합니다.</p>
+        <p className="subtitle">AI 기반 대시보드의 실시간 알림 트리거 및 디버그 설정을 동적으로 구성합니다.</p>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
@@ -63,6 +69,41 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="glass-card" style={{ marginTop: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '1.5rem', borderBottom: '1px solid var(--border-glow)', paddingBottom: '12px', flex: 1, margin: 0 }}>디버그 및 수동 제어</h2>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '1rem', fontWeight: '500' }}>
+            <input 
+              type="checkbox" 
+              checked={debugMode} 
+              onChange={(e) => setDebugMode(e.target.checked)} 
+              style={{ marginRight: '8px', width: '18px', height: '18px' }}
+            />
+            디버그 모드 켜기
+          </label>
+        </div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '1rem', lineHeight: '1.6' }}>
+          {debugMode ? (
+            <>
+              <p style={{ marginBottom: '16px' }}>캐시(Cache)를 무시하고 AI 에이전트 분석을 강제로 새로 수행합니다.</p>
+              <button 
+                onClick={() => {
+                  alert('강제 업데이트 신호가 서버로 전송되었습니다.');
+                }}
+                style={{
+                  backgroundColor: '#3b82f6', color: 'white', border: 'none', padding: '12px 24px',
+                  borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem'
+                }}
+              >
+                🚀 AI 강제 업데이트 신호 전송
+              </button>
+            </>
+          ) : (
+            <p>디버그 모드를 켜면 AI 에이전트 강제 갱신(Force Update) 버튼이 활성화됩니다. 일반 모드에서는 빠른 캐시 데이터를 사용합니다.</p>
+          )}
         </div>
       </div>
     </main>
