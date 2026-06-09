@@ -7,7 +7,7 @@ sqlalchemy==2.0.30
 apscheduler==3.10.4
 
 # Azure AI Agent Service
-azure-ai-projects==1.0.0b2
+azure-ai-projects
 gunicorn==22.0.0
 azure-identity==1.19.0
 
