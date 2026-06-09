@@ -66,6 +66,7 @@ backend/eda/test_out.xml
 Thumbs.db
 mylogs/
 mylogs.zip
+Summary/
 
 # 6. 문서 파일 무시
 # ------------------------------------------------------------------------------
