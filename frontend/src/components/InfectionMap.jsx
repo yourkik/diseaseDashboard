@@ -52,7 +52,8 @@ export default function InfectionMap({ diseaseName }) {
       try {
         // 정적 지도이므로 월별 가짜 데이터(/spread) 대신 실제 연간 지역 데이터(/status) 호출
         // 백엔드에서 기본값으로 최신 연도(올해) 데이터를 불러옵니다.
-        const res = await fetch(`http://localhost:8000/api/stats/map/status?disease=${diseaseName}`);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${diseaseName}`);
         if (!res.ok) throw new Error("Backend server error");
         
         const data = await res.json();

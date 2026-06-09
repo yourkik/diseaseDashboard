@@ -12,7 +12,8 @@ export default function NewsPanel({ diseaseName }) {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`http://localhost:8000/api/news?disease=${encodeURIComponent(diseaseName)}`);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${baseUrl}/api/news?disease=${encodeURIComponent(diseaseName)}`);
         if (!response.ok) {
           throw new Error('뉴스를 불러오는데 실패했습니다.');
         }

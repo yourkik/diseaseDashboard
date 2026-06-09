@@ -11,7 +11,8 @@ export default function AIInsightsPanel({ diseaseName }) {
     setLoading(true);
     setError(null);
     try {
-      const url = `http://localhost:8000/api/insights?disease=${encodeURIComponent(diseaseName)}${forceRefresh ? '&force_refresh=true' : ''}`;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const url = `${baseUrl}/api/insights?disease=${encodeURIComponent(diseaseName)}${forceRefresh ? '&force_refresh=true' : ''}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('리포트를 불러오는데 실패했습니다.');
