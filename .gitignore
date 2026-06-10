@@ -69,5 +69,11 @@ mylogs.zip
 Summary/
 
 # 6. 문서 파일 무시
+# 7. 임시 테스트 및 디버그 파일 무시
 # ------------------------------------------------------------------------------
+test_*.py
+debug_*.py
+scratch_*.py
+test.py
+client_source.txt
 # Summary/ (GitHub 업로드를 위해 주석 처리)
