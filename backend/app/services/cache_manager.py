@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+import pytz
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
 CACHE_FILE = os.path.join(CACHE_DIR, 'disease_cache.json')
@@ -31,7 +32,7 @@ def get_disease_cache(disease: str):
 
 def update_disease_cache(disease: str, data: list):
     cache = load_cache()
-    now_str = datetime.now().isoformat()
+    now_str = datetime.now(pytz.timezone('Asia/Seoul')).isoformat()
     cache[disease] = {
         "last_updated": now_str,
         "data": data
@@ -59,7 +60,7 @@ def get_insights_cache(disease: str):
 
 def update_insights_cache(disease: str, data: dict):
     cache = load_insights_cache()
-    now_str = datetime.now().isoformat()
+    now_str = datetime.now(pytz.timezone('Asia/Seoul')).isoformat()
     cache[disease] = {
         "last_updated": now_str,
         "data": data
