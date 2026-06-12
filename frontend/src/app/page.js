@@ -3,19 +3,21 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
+import PredictionPanel from '@/components/PredictionPanel';
 import InfectionMap from "@/components/InfectionMap";
 import TotalStatsPanel from "@/components/TotalStatsPanel";
+
 
 const RealMap = dynamic(() => import("@/components/RealMap"), {
   ssr: false,
   loading: () => (
-    <div style={{ 
-      height: '650px', 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      backgroundColor: 'rgba(30, 41, 59, 0.7)', 
-      color: '#94a3b8', 
+    <div style={{
+      height: '650px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(30, 41, 59, 0.7)',
+      color: '#94a3b8',
       borderRadius: '16px',
       border: '1px solid rgba(255, 255, 255, 0.1)'
     }}>
@@ -38,13 +40,13 @@ export default function Home() {
 
       {/* 상단 요약 카드 섹션 (기존 루트에 있던 내용) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginBottom: '40px' }}>
-        
+
         <div className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ margin: 0 }}>선택된 질병</h3>
             <span className="badge success">관찰중</span>
           </div>
-          
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             {diseases.map(disease => (
               <button
@@ -81,7 +83,7 @@ export default function Home() {
       {/* 맵 모드 스위치 */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
         <div style={{ display: 'flex', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <button 
+          <button
             onClick={() => setMapMode('static')}
             style={{
               padding: '8px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
@@ -91,7 +93,7 @@ export default function Home() {
             }}>
             정적 다각형 모드
           </button>
-          <button 
+          <button
             onClick={() => setMapMode('real')}
             style={{
               padding: '8px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
@@ -105,9 +107,9 @@ export default function Home() {
       </div>
 
       {/* 메인 2단 레이아웃: 지도 + 리포트 */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'minmax(0, 1.8fr) minmax(0, 1.2fr)', 
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1.8fr) minmax(0, 1.2fr)',
         gap: '24px',
         alignItems: 'start'
       }}>
@@ -124,12 +126,17 @@ export default function Home() {
         <div style={{ display: 'flex', flexDirection: 'column', height: '750px' }}>
           {/* 1. 전국 통합 지표 차트 패널 */}
           <TotalStatsPanel diseaseName={selectedDisease} />
-          
+
           {/* 2. AI 리포트 패널 */}
           <div style={{ flex: 1, minHeight: 0 }}>
             <AIInsightsPanel diseaseName={selectedDisease} />
           </div>
         </div>
+      </div>
+      
+      {/* 3. 예측 패널 */}
+      <div style={{ width: '100%', marginTop: '24px' }}>
+        <PredictionPanel diseaseName={selectedDisease} />
       </div>
     </main>
   );

@@ -4,13 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-# 서비스 레이어 임포트
-from app.services.ingestion import fetch_kdca_stats, get_integrated_news, fetch_kdca_disease_contents
-from app.routers import disease_stats, ai_insights
-
-# .env 환경변수 로드
+# 1. 환경변수 선행 로드
 load_dotenv()
 
+# 2. 라우터 및 서비스 레이어 임포트
+from app.api import predict
+from app.routers import disease_stats, ai_insights
+from app.services.ingestion import fetch_kdca_stats, get_integrated_news, fetch_kdca_disease_contents
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 @asynccontextmanager
@@ -36,6 +36,7 @@ app.add_middleware(
 )
 
 # 라우터 등록
+app.include_router(predict.router, prefix="/api")
 app.include_router(disease_stats.router)
 app.include_router(ai_insights.router)
 
