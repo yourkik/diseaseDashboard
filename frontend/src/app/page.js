@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import AIInsightsPanel from "@/components/AIInsightsPanel";
 import InfectionMap from "@/components/InfectionMap";
+import TotalStatsPanel from "@/components/TotalStatsPanel";
 
 const RealMap = dynamic(() => import("@/components/RealMap"), {
   ssr: false,
@@ -119,9 +120,15 @@ export default function Home() {
           )}
         </div>
 
-        {/* 우측: AI 리포트 패널 (전수 탐색 모드 유지) */}
-        <div style={{ height: '750px' }}>
-          <AIInsightsPanel diseaseName={selectedDisease} />
+        {/* 우측: 전국 단위 통계 패널 + AI 리포트 패널 */}
+        <div style={{ display: 'flex', flexDirection: 'column', height: '750px' }}>
+          {/* 1. 전국 통합 지표 차트 패널 */}
+          <TotalStatsPanel diseaseName={selectedDisease} />
+          
+          {/* 2. AI 리포트 패널 */}
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <AIInsightsPanel diseaseName={selectedDisease} />
+          </div>
         </div>
       </div>
     </main>

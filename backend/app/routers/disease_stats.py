@@ -125,3 +125,84 @@ def get_map_spread(disease: str, year: Optional[str] = None, period_type: str = 
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/total")
+def get_total_stats(disease: str, year: Optional[str] = None):
+    """
+    전국 통합 지표: 특정 질병의 전국 누적 확진자 수, 10만 명당 발생률, 월별 발생 추이를 반환합니다.
+    """
+    try:
+        api_disease_name = DISEASE_MAPPING.get(disease, disease)
+        
+        if not year:
+            year = str(datetime.now().year)
+
+        # 에볼라 등 국내 데이터가 없는 경우의 기본값
+        if api_disease_name == "에볼라바이러스병":
+            return {
+                "disease": disease,
+                "year": year,
+                "total_count": 0,
+                "incidence_rate": 0.0,
+                "monthly_trend": []
+            }
+
+        total_count = 0
+        incidence_rate = 0.0
+        monthly_trend = []
+
+        # 코로나19 데이터 처리 (현재 로컬 COVID 서비스 사용)
+        if api_disease_name == "코로나바이러스감염증-19":
+            count_data = fetch_covid_region_status(year=year)
+            count_items = count_data.get("response", {}).get("body", {}).get("items", {}).get("item", [])
+            for item in count_items:
+                if item.get("sidoNm") in ["합계", "전국"] or item.get("sidoCd") == "00":
+                    total_count = safe_int(item.get("resultVal", 0))
+                    
+            spread_data = fetch_covid_period_spread(start_year=year, end_year=year)
+            for item in spread_data:
+                if item.get("sidoNm") in ["합계", "전국"] or item.get("sidoCd") == "00":
+                    monthly_trend.append({
+                        "period": item.get("period"),
+                        "count": safe_int(item.get("resultVal", 0))
+                    })
+        else:
+            # KDCA 전수감시 데이터 처리 (sidoCd == "00" 이 전국 합계)
+            count_data = fetch_kdca_region_status(year=year, search_type="1")
+            rate_data = fetch_kdca_region_status(year=year, search_type="2")
+            
+            count_items = count_data.get("response", {}).get("body", {}).get("items", {}).get("item", [])
+            if isinstance(count_items, dict): count_items = [count_items]
+            rate_items = rate_data.get("response", {}).get("body", {}).get("items", {}).get("item", [])
+            if isinstance(rate_items, dict): rate_items = [rate_items]
+            
+            for item in count_items:
+                if item.get("icdNm") == api_disease_name and item.get("sidoCd") == "00":
+                    total_count = safe_int(item.get("resultVal", 0))
+            
+            for item in rate_items:
+                if item.get("icdNm") == api_disease_name and item.get("sidoCd") == "00":
+                    incidence_rate = safe_float(item.get("resultVal", 0))
+                    
+            # 월별 추이 데이터 수집
+            spread_data = fetch_kdca_period_spread(start_year=year, end_year=year, period_type="2")
+            for item in spread_data:
+                if item.get("icdNm") == api_disease_name and item.get("sidoCd") == "00":
+                    monthly_trend.append({
+                        "period": item.get("period"),
+                        "count": safe_int(item.get("resultVal", 0))
+                    })
+
+        # 기간(월) 기준으로 오름차순 정렬
+        monthly_trend.sort(key=lambda x: x["period"])
+
+        return {
+            "disease": disease,
+            "year": year,
+            "total_count": total_count,
+            "incidence_rate": incidence_rate,
+            "monthly_trend": monthly_trend
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
