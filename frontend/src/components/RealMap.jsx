@@ -37,6 +37,7 @@ export default function RealMap({ diseaseName }) {
   const popupRef = useRef(null);
 
   const [aggregatedData, setAggregatedData] = useState({});
+  const [rawData, setRawData] = useState({});
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
 
@@ -55,12 +56,15 @@ export default function RealMap({ diseaseName }) {
         
         const data = await res.json();
         const totals = {};
+        const rawMap = {};
         Object.values(data).forEach(item => {
           let region = isEbola ? item.region : item.region.substring(0, 2); 
           totals[region] = item.count;
+          rawMap[region] = item;
         });
         
         setAggregatedData(totals);
+        setRawData(rawMap);
       } catch (err) {
         console.error("Failed to fetch map data", err);
       } finally {
@@ -315,6 +319,23 @@ export default function RealMap({ diseaseName }) {
 
   }, [aggregatedData, mapReady, currentCenter, currentZoom]);
 
+  let periodDisplay = "데이터 로드 중...";
+  if (isEbola) {
+    periodDisplay = `HDX 글로벌 데이터 (${new Date().getFullYear()}년)`;
+  } else if (Object.keys(rawData).length > 0) {
+    const firstItem = Object.values(rawData)[0];
+    const rawPeriod = firstItem.period || "";
+    
+    if (diseaseName === "코로나19") {
+      const endDate = rawPeriod ? rawPeriod.split(' ')[0] : "현재";
+      periodDisplay = `2020년 발병 이후 ~ ${endDate} 누적`;
+    } else {
+      const yearMatch = rawPeriod.match(/(\d{4})년/);
+      const yearStr = yearMatch ? `${yearMatch[1]}년 1월 1일` : "당해 연도";
+      periodDisplay = `${yearStr} ~ 현재 누적`;
+    }
+  }
+
   return (
     <div className="mapContainer" style={{ backgroundColor: '#ffffff', color: '#333' }}>
       <div className="mapHeader" style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem', marginBottom: '1rem' }}>
@@ -339,7 +360,7 @@ export default function RealMap({ diseaseName }) {
         </div>
         <div className="periodBadge" style={{ backgroundColor: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' }}>
           <AlertTriangle size={20} />
-          <span>Azure Maps 실시간 렌더링</span>
+          <span>{periodDisplay}</span>
         </div>
       </div>
 

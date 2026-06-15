@@ -34,6 +34,7 @@ export default function RootLayout({ children }) {
           <div className="nav-links">
             <Link href="/">대시보드</Link>
             <Link href="/analytics">심층 통계(Test)</Link>
+            <Link href="/bi">종합 BI 분석</Link>
             <Link href="/admin">관리자 설정</Link>
           </div>
         </nav>

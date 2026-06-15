@@ -102,15 +102,22 @@ export default function InfectionMap({ diseaseName }) {
     return name.substring(0, 2);
   };
 
-  let periodDisplay = isEbola ? "HDX 글로벌 데이터 (2026년)" : "데이터 로드 중...";
-  if (!isEbola && Object.keys(rawData).length > 0) {
+  let periodDisplay = "데이터 로드 중...";
+  if (isEbola) {
+    periodDisplay = `HDX 글로벌 데이터 (${new Date().getFullYear()}년)`;
+  } else if (Object.keys(rawData).length > 0) {
     const firstItem = Object.values(rawData)[0];
-    if (firstItem.period) {
-      periodDisplay = firstItem.period.includes("누적 데이터") 
-        ? firstItem.period 
-        : `${firstItem.period} 기준 데이터`;
+    const rawPeriod = firstItem.period || "";
+    
+    if (diseaseName === "코로나19") {
+      // rawPeriod 예: "2022-12-16"
+      const endDate = rawPeriod ? rawPeriod.split(' ')[0] : "현재";
+      periodDisplay = `2020년 발병 이후 ~ ${endDate} 누적`;
     } else {
-      periodDisplay = "최신 누적 데이터";
+      // rawPeriod 예: "2026년 누적 데이터"
+      const yearMatch = rawPeriod.match(/(\d{4})년/);
+      const yearStr = yearMatch ? `${yearMatch[1]}년 1월 1일` : "당해 연도";
+      periodDisplay = `${yearStr} ~ 현재 누적`;
     }
   }
 
