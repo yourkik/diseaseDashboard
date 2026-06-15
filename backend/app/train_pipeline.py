@@ -82,8 +82,9 @@ def load_and_preprocess_data(data_dir):
     return final_df
 
 def train_xgboost_model():
-    data_dir = "backend/app/data"
-    model_dir = "backend/app/models"
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(CURRENT_DIR, "data")
+    model_dir = os.path.join(CURRENT_DIR, "models")
     os.makedirs(model_dir, exist_ok=True)
     
     print("=== 1단계: 멀티 래그 슬라이딩 윈도우 및 이동 평균 연산 가동 ===")
@@ -106,7 +107,6 @@ def train_xgboost_model():
     df['lag_3'] = df.groupby(['질병명_encoded', '지역_encoded'])['발생건수'].shift(3)
     
     # 최근 3주간의 이동 평균(Rolling Mean) 피처 생성 (단기 노이즈 평탄화)
-    # 자기 자신(금주 발생건수)을 포함하지 않기 위해 shift(1) 기준 윈도우 연산 적용
     df['rolling_mean_3'] = df.groupby(['질병명_encoded', '지역_encoded'])['lag_1'].transform(lambda x: x.rolling(window=3, min_periods=1).mean())
     
     # 과거 데이터 누락 영역 결측치 보정 (중앙값 대체 후 0 처리)
@@ -122,9 +122,9 @@ def train_xgboost_model():
     
     print(f"\n=== 2단계: 최적화 하이퍼파라미터 기반 XGBoost 파인튜닝 ===")
     model = xgb.XGBRegressor(
-        n_estimators=800,         # 성능 극대화를 위해 트리 용량 재확장
-        learning_rate=0.02,       # 오차 수렴 정밀도 극대화
-        max_depth=5,
+        n_estimators=1000,
+        learning_rate=0.03,
+        max_depth=7,
         subsample=0.8,
         colsample_bytree=0.8,
         random_state=42
