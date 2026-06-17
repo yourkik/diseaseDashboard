@@ -122,12 +122,8 @@ export default function Home() {
           )}
         </div>
 
-        {/* 우측: 전국 단위 통계 패널 + AI 리포트 패널 */}
+        {/* 우측: AI 리포트 패널 (전체 높이 사용) */}
         <div style={{ display: 'flex', flexDirection: 'column', height: '750px' }}>
-          {/* 1. 전국 통합 지표 차트 패널 */}
-          <TotalStatsPanel diseaseName={selectedDisease} />
-
-          {/* 2. AI 리포트 패널 */}
           <div style={{ flex: 1, minHeight: 0 }}>
             <AIInsightsPanel diseaseName={selectedDisease} />
           </div>

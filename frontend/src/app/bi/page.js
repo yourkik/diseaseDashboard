@@ -91,8 +91,9 @@ export default function BIDashboardPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
         {/* 인구통계 파이 차트 */}
         <BIDemographicChart 
-          demographics={dataset.Fact_Demographics} 
-          selectedDisease={selectedDisease === "전체" ? "코로나19" : selectedDisease} 
+          demographicsAge={dataset.Fact_Demographics_Age} 
+          demographicsGender={dataset.Fact_Demographics_Gender} 
+          selectedDisease={selectedDisease === "전체" ? "수두" : selectedDisease} 
         />
         
         {/* 의료 인프라 바/산점도 차트 */}

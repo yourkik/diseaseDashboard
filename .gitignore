@@ -77,3 +77,5 @@ scratch_*.py
 test.py
 client_source.txt
 # Summary/ (GitHub 업로드를 위해 주석 처리)
+de_venv/
+Summary/

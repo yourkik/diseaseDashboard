@@ -1,0 +1,13 @@
+disease_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: sentinel
+      password: sentinel_password
+      port: 5433
+      dbname: sentinel_db
+      schema: analytics
+      threads: 1
+      keepalives_idle: 0
