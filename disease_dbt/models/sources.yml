@@ -2,7 +2,7 @@ version: 2
 
 sources:
   - name: raw
-    database: sentinel_db
+    database: "{{ env_var('DB_NAME', 'sentinel_db') }}"
     schema: raw_data
     tables:
       - name: kdca_region_status
