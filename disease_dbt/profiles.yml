@@ -3,11 +3,11 @@ disease_dbt:
   outputs:
     dev:
       type: postgres
-      host: localhost
-      user: sentinel
-      password: sentinel_password
-      port: 5433
-      dbname: sentinel_db
+      host: "{{ env_var('DB_HOST', '127.0.0.1') }}"
+      user: "{{ env_var('DB_USER', 'sentinel') }}"
+      password: "{{ env_var('DB_PASS', 'sentinel_password') }}"
+      port: "{{ env_var('DB_PORT', '5433') | as_number }}"
+      dbname: "{{ env_var('DB_NAME', 'sentinel_db') }}"
       schema: analytics
       threads: 1
       keepalives_idle: 0

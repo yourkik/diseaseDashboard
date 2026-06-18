@@ -34,6 +34,7 @@ def safe_int(val):
 
 def create_raw_tables(cur):
     queries = [
+        "CREATE SCHEMA IF NOT EXISTS raw_data;",
         """
         CREATE TABLE IF NOT EXISTS raw_data.kdca_region_status (
             id SERIAL PRIMARY KEY,
