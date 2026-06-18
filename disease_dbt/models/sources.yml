@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('DB_NAME', 'sentinel_db') }}"
+    schema: raw_data
+    tables:
+      - name: kdca_region_status
+      - name: kdca_age_status
+      - name: kdca_gender_status
+      - name: kdca_period_status

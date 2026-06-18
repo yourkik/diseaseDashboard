@@ -25,26 +25,59 @@ def get_regional_infrastructure():
         {"region": "제주", "population": 670000,  "elderly_ratio": 17.1, "total_beds": 5000},
     ]
 
-def get_demographic_infection_weights():
+import psycopg2
+import os
+
+def get_db_connection():
+    return psycopg2.connect(
+        host=os.getenv("DB_HOST", "127.0.0.1"), 
+        port=os.getenv("DB_PORT", "5433"), 
+        dbname=os.getenv("DB_NAME", "sentinel_db"), 
+        user=os.getenv("DB_USER", "sentinel"), 
+        password=os.getenv("DB_PASS", "sentinel_password")
+    )
+
+def get_demographic_age_real():
     """
-    질병별 연령/성별 감염 가중치 (API 미지원에 따른 역학 시뮬레이션 용도)
-    Power BI의 Fact_Demographics 테이블로 활용됩니다.
+    실제 KDCA 연령별 질병 발생 건수 (dbt fact table)
     """
-    return {
-        "수두": [
-            {"age_group": "0-9세", "gender": "M", "weight": 0.45},
-            {"age_group": "0-9세", "gender": "F", "weight": 0.40},
-            {"age_group": "10-19세", "gender": "M", "weight": 0.05},
-            {"age_group": "10-19세", "gender": "F", "weight": 0.05},
-            {"age_group": "20세 이상", "gender": "M", "weight": 0.02},
-            {"age_group": "20세 이상", "gender": "F", "weight": 0.03},
-        ],
-        "코로나19": [
-            {"age_group": "0-19세", "gender": "M", "weight": 0.08},
-            {"age_group": "0-19세", "gender": "F", "weight": 0.07},
-            {"age_group": "20-59세", "gender": "M", "weight": 0.30},
-            {"age_group": "20-59세", "gender": "F", "weight": 0.35},
-            {"age_group": "60세 이상", "gender": "M", "weight": 0.10},
-            {"age_group": "60세 이상", "gender": "F", "weight": 0.10},
-        ]
-    }
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT disease_name, age_range, total_cases FROM analytics.fact_demographic_age;")
+        rows = cur.fetchall()
+        
+        result = {}
+        for disease, age_range, count in rows:
+            if disease not in result:
+                result[disease] = []
+            result[disease].append({"age_group": age_range, "count": count})
+            
+        cur.close()
+        conn.close()
+        return result
+    except:
+        return {}
+
+def get_demographic_gender_real():
+    """
+    실제 KDCA 성별 질병 발생 건수 (dbt fact table)
+    """
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT disease_name, gender, total_cases FROM analytics.fact_demographic_gender;")
+        rows = cur.fetchall()
+        
+        result = {}
+        for disease, gender, count in rows:
+            if disease not in result:
+                result[disease] = []
+            result[disease].append({"gender": "M" if gender == "남성" else "F" if gender == "여성" else gender, "count": count})
+            
+        cur.close()
+        conn.close()
+        return result
+    except:
+        return {}
+

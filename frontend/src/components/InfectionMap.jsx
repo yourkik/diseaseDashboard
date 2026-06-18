@@ -107,18 +107,10 @@ export default function InfectionMap({ diseaseName }) {
     periodDisplay = `HDX 글로벌 데이터 (${new Date().getFullYear()}년)`;
   } else if (Object.keys(rawData).length > 0) {
     const firstItem = Object.values(rawData)[0];
-    const rawPeriod = firstItem.period || "";
+    const rawPeriod = firstItem.period || "최신 누적 데이터";
     
-    if (diseaseName === "코로나19") {
-      // rawPeriod 예: "2022-12-16"
-      const endDate = rawPeriod ? rawPeriod.split(' ')[0] : "현재";
-      periodDisplay = `2020년 발병 이후 ~ ${endDate} 누적`;
-    } else {
-      // rawPeriod 예: "2026년 누적 데이터"
-      const yearMatch = rawPeriod.match(/(\d{4})년/);
-      const yearStr = yearMatch ? `${yearMatch[1]}년 1월 1일` : "당해 연도";
-      periodDisplay = `${yearStr} ~ 현재 누적`;
-    }
+    // 백엔드에서 정제한 문구를 그대로 반영
+    periodDisplay = rawPeriod;
   }
 
   return (

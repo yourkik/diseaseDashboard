@@ -1,11 +1,12 @@
 # app/routers/powerbi.py
 
 from fastapi import APIRouter, HTTPException
-from app.services.medical_service import get_regional_infrastructure, get_demographic_infection_weights
+from app.services.medical_service import get_regional_infrastructure, get_demographic_age_real, get_demographic_gender_real
 from app.services.mobility_service import get_weekly_mobility_data
-from app.services.kdca_service import fetch_kdca_period_spread
 from app.services.covid_service import fetch_covid_period_spread
 from datetime import datetime
+import psycopg2
+import os
 
 router = APIRouter(prefix="/api/powerbi", tags=["Power BI Dataset"])
 
@@ -29,31 +30,55 @@ def export_powerbi_dataset(year: str = None):
         # 1. Dim_Region_Infrastructure
         regions = get_regional_infrastructure()
         
-        # 2. Fact_Demographics
-        demographics = get_demographic_infection_weights()
+        # 2. Fact_Demographics (Age and Gender)
+        demographics_age = get_demographic_age_real()
+        demographics_gender = get_demographic_gender_real()
         
         # 3. Fact_Mobility
         mobility = get_weekly_mobility_data(int(year))
         
-        # 4. Fact_Infections (KDCA + COVID API 병합)
+        # 4. Fact_Infections (KDCA DB + COVID API 병합)
         infections = []
         
-        # 일반 법정감염병 월별 데이터
-        kdca_data = fetch_kdca_period_spread(start_year=year, end_year=year, period_type="2")
-        for item in kdca_data:
-            icdNm = item.get("icdNm")
-            if icdNm in DISEASES:
-                sidoNm = item.get("sidoNm")
-                # "00" (전국) 및 "기타" 등 제외, 순수 지역만
-                if item.get("sidoCd") != "00" and sidoNm:
-                    infections.append({
-                        "Date": item.get("period"), # "2023년 01월"
-                        "Region": sidoNm,
-                        "Disease": "수두" if icdNm == "수두" else "백일해" if icdNm == "백일해" else "유행성이하선염",
-                        "Count": safe_int(item.get("resultVal", 0))
-                    })
+        # 일반 법정감염병 월별 데이터 (PostgreSQL dbt Fact 테이블에서 직접 조회)
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "127.0.0.1"), 
+            port=os.getenv("DB_PORT", "5433"), 
+            dbname=os.getenv("DB_NAME", "sentinel_db"), 
+            user=os.getenv("DB_USER", "sentinel"), 
+            password=os.getenv("DB_PASS", "sentinel_password")
+        )
+        cur = conn.cursor()
+        
+        # DB에 존재하는 가장 최신 연도 확인 ('계' 등 예외 문자열 제외)
+        cur.execute("SELECT MAX(SUBSTRING(period_str, 1, 4)) FROM analytics.fact_spread_timeline WHERE period_str LIKE '20%'")
+        max_year_row = cur.fetchone()
+        db_max_year = max_year_row[0] if max_year_row and max_year_row[0] else str(datetime.now().year)
+        
+        # 요청한 연도(현재 2026년 등)가 DB의 최신 연도보다 크면 최신 연도로 강제 조정
+        if year > db_max_year:
+            year = db_max_year
+
+        # 해당 연도의 데이터만 가져오기 (period_str: "2023년 01월" 형태)
+        cur.execute("""
+            SELECT period_str, region_name, disease_name, total_cases
+            FROM analytics.fact_spread_timeline
+            WHERE period_str LIKE %s
+        """, (f"{year}년%",))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        for period, region, disease, count in rows:
+            if region != "합계" and region != "전국":
+                infections.append({
+                    "Date": period,
+                    "Region": region,
+                    "Disease": disease,
+                    "Count": count
+                })
                     
-        # 코로나19 월별 데이터
+        # 코로나19 월별 데이터 (코로나 DB 연동 전까지 API 사용)
         covid_data = fetch_covid_period_spread(start_year=year, end_year=year)
         for item in covid_data:
             sidoNm = item.get("sidoNm")
@@ -67,7 +92,8 @@ def export_powerbi_dataset(year: str = None):
 
         return {
             "Dim_Region": regions,
-            "Fact_Demographics": demographics,
+            "Fact_Demographics_Age": demographics_age,
+            "Fact_Demographics_Gender": demographics_gender,
             "Fact_Mobility": mobility,
             "Fact_Infections": infections
         }

@@ -40,6 +40,7 @@ export default function RealMap({ diseaseName }) {
   const [rawData, setRawData] = useState({});
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
+  const [selectedYear, setSelectedYear] = useState('2024');
 
   const isEbola = diseaseName === '에볼라';
   const currentCenter = isEbola ? [23.5, -2.5] : [127.6358, 36.2683];
@@ -51,7 +52,7 @@ export default function RealMap({ diseaseName }) {
       setLoading(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${diseaseName}`);
+        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${diseaseName}&year=${selectedYear}`);
         if (!res.ok) throw new Error("Backend server error");
         
         const data = await res.json();
@@ -73,7 +74,7 @@ export default function RealMap({ diseaseName }) {
     };
     
     if (diseaseName) fetchSpreadData();
-  }, [diseaseName]);
+  }, [diseaseName, selectedYear]);
 
   // 2. Azure Maps 초기화
   useEffect(() => {
@@ -324,21 +325,15 @@ export default function RealMap({ diseaseName }) {
     periodDisplay = `HDX 글로벌 데이터 (${new Date().getFullYear()}년)`;
   } else if (Object.keys(rawData).length > 0) {
     const firstItem = Object.values(rawData)[0];
-    const rawPeriod = firstItem.period || "";
+    const rawPeriod = firstItem.period || "최신 누적 데이터";
     
-    if (diseaseName === "코로나19") {
-      const endDate = rawPeriod ? rawPeriod.split(' ')[0] : "현재";
-      periodDisplay = `2020년 발병 이후 ~ ${endDate} 누적`;
-    } else {
-      const yearMatch = rawPeriod.match(/(\d{4})년/);
-      const yearStr = yearMatch ? `${yearMatch[1]}년 1월 1일` : "당해 연도";
-      periodDisplay = `${yearStr} ~ 현재 누적`;
-    }
+    // 백엔드에서 정제한 문구를 그대로 사용하거나, 코로나19의 경우 직관적인 문구로 변경
+    periodDisplay = rawPeriod;
   }
 
   return (
     <div className="mapContainer" style={{ backgroundColor: '#ffffff', color: '#333' }}>
-      <div className="mapHeader" style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem', marginBottom: '1rem' }}>
+      <div className="mapHeader" style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h2 className="mapTitle" style={{ background: 'linear-gradient(to right, #ef4444, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             {diseaseName} 동적 확산 지도 (Azure Maps)
@@ -358,9 +353,20 @@ export default function RealMap({ diseaseName }) {
             </div>
           </div>
         </div>
-        <div className="periodBadge" style={{ backgroundColor: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' }}>
-          <AlertTriangle size={20} />
-          <span>{periodDisplay}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+          <select 
+            value={selectedYear} 
+            onChange={(e) => setSelectedYear(e.target.value)}
+            style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', color: '#334155', fontWeight: 'bold', cursor: 'pointer', outline: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+          >
+            <option value="2024">2024년 동향</option>
+            <option value="2023">2023년 동향</option>
+            <option value="전체">전체 누적 확인</option>
+          </select>
+          <div className="periodBadge" style={{ backgroundColor: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' }}>
+            <AlertTriangle size={20} />
+            <span>{periodDisplay}</span>
+          </div>
         </div>
       </div>
 
