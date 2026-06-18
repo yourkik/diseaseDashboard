@@ -5,7 +5,7 @@ WITH raw_source AS (
     SELECT 
         id as raw_id,
         region_name,
-        created_at as loaded_at,
+        created_at,
         raw_payload
     FROM {{ source('raw', 'kdca_region_status') }}
 ),
@@ -14,7 +14,7 @@ parsed_json AS (
     SELECT
         raw_id,
         region_name,
-        loaded_at,
+        created_at,
         jsonb_array_elements(raw_payload#>'{response,body,items,item}') AS item
     FROM raw_source
     WHERE raw_payload#>'{response,body,items,item}' IS NOT NULL
@@ -24,7 +24,7 @@ deduped AS (
     SELECT
         raw_id,
         region_name,
-        loaded_at,
+        created_at,
         (item->>'icdNm')::text AS disease_name,
         (item->>'stdDay')::date AS std_day,
         (item->>'incDec')::int AS new_cases,
@@ -32,7 +32,7 @@ deduped AS (
         (item->>'deathCnt')::int AS total_deaths,
         ROW_NUMBER() OVER(
             PARTITION BY region_name, (item->>'icdNm')::text, (item->>'stdDay')::date 
-            ORDER BY loaded_at DESC, raw_id DESC
+            ORDER BY created_at DESC, raw_id DESC
         ) as rn
     FROM parsed_json
 )
@@ -40,7 +40,7 @@ deduped AS (
 SELECT
     raw_id,
     region_name,
-    loaded_at,
+    created_at,
     disease_name,
     std_day,
     new_cases,
