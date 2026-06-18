@@ -18,7 +18,7 @@ export default function PredictionPanel({ diseaseName }) {
   const [loadingSearch, setLoadingSearch] = useState(false);
 
   const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/api';
-  const isPredictable = ['수두', '백일해', '유행성이하선염'].includes(diseaseName);
+  const isPredictable = ['수두', '백일해', '유행성이하선염', '코로나19', 'covid'].includes(diseaseName);
 
   useEffect(() => {
     const generateFutureWeeks = () => {
