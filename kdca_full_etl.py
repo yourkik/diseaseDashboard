@@ -15,11 +15,11 @@ from app.services.kdca_service import (
     fetch_kdca_period_region
 )
 
-DB_HOST = 'localhost'
-DB_PORT = '5433'
-DB_NAME = 'sentinel_db'
-DB_USER = 'sentinel'
-DB_PASS = 'sentinel_password'
+DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
+DB_PORT = os.getenv('DB_PORT', '5433')
+DB_NAME = os.getenv('DB_NAME', 'sentinel_db')
+DB_USER = os.getenv('DB_USER', 'sentinel')
+DB_PASS = os.getenv('DB_PASS', 'sentinel_password')
 
 # 이전 캐시 파일 삭제 (항상 최신 데이터를 강제로 받아오기 위함)
 cache_file = os.path.join(os.getcwd(), 'backend', 'app', 'services', 'kdca_cache.json')

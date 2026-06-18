@@ -26,9 +26,16 @@ def get_regional_infrastructure():
     ]
 
 import psycopg2
+import os
 
 def get_db_connection():
-    return psycopg2.connect(host="127.0.0.1", port="5433", dbname="sentinel_db", user="sentinel", password="sentinel_password")
+    return psycopg2.connect(
+        host=os.getenv("DB_HOST", "127.0.0.1"), 
+        port=os.getenv("DB_PORT", "5433"), 
+        dbname=os.getenv("DB_NAME", "sentinel_db"), 
+        user=os.getenv("DB_USER", "sentinel"), 
+        password=os.getenv("DB_PASS", "sentinel_password")
+    )
 
 def get_demographic_age_real():
     """

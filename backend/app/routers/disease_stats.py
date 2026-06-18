@@ -5,6 +5,7 @@ from app.services.covid_service import fetch_covid_region_status, fetch_covid_pe
 from app.services.ebola_service import fetch_ebola_region_status
 from datetime import datetime
 import psycopg2
+import os
 
 DISEASE_MAPPING = {
     "한타바이러스": "신증후군출혈열",
@@ -38,7 +39,13 @@ def get_map_status(disease: str, year: Optional[str] = None):
         api_disease_name = DISEASE_MAPPING.get(disease, disease)
         
         # DB 연동 (실제 운영 시에는 SQLAlchemy Connection Pool 등을 사용)
-        conn = psycopg2.connect(host="127.0.0.1", port="5433", dbname="sentinel_db", user="sentinel", password="sentinel_password")
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "127.0.0.1"), 
+            port=os.getenv("DB_PORT", "5433"), 
+            dbname=os.getenv("DB_NAME", "sentinel_db"), 
+            user=os.getenv("DB_USER", "sentinel"), 
+            password=os.getenv("DB_PASS", "sentinel_password")
+        )
         cur = conn.cursor()
         
         # dbt가 가공한 팩트 테이블에서 특정 질병의 가장 최신(최대) 누적 데이터를 지역별로 1건씩만 조회
@@ -128,7 +135,13 @@ def get_map_spread(disease: str, year: Optional[str] = None, period_type: str = 
         if api_disease_name == "에볼라바이러스병" or api_disease_name == "코로나바이러스감염증-19":
             return {}
 
-        conn = psycopg2.connect(host="127.0.0.1", port="5433", dbname="sentinel_db", user="sentinel", password="sentinel_password")
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "127.0.0.1"), 
+            port=os.getenv("DB_PORT", "5433"), 
+            dbname=os.getenv("DB_NAME", "sentinel_db"), 
+            user=os.getenv("DB_USER", "sentinel"), 
+            password=os.getenv("DB_PASS", "sentinel_password")
+        )
         cur = conn.cursor()
         
         # 전체 시계열 데이터를 가져옵니다.
@@ -186,7 +199,13 @@ def get_total_stats(disease: str, year: Optional[str] = None):
         incidence_rate = 0.0
         monthly_trend = []
 
-        conn = psycopg2.connect(host="127.0.0.1", port="5433", dbname="sentinel_db", user="sentinel", password="sentinel_password")
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "127.0.0.1"), 
+            port=os.getenv("DB_PORT", "5433"), 
+            dbname=os.getenv("DB_NAME", "sentinel_db"), 
+            user=os.getenv("DB_USER", "sentinel"), 
+            password=os.getenv("DB_PASS", "sentinel_password")
+        )
         cur = conn.cursor()
         
         # 전국 단위 (region_name 이 '합계' 이거나 혹은 전체 지역 총합) 

@@ -6,6 +6,7 @@ from app.services.mobility_service import get_weekly_mobility_data
 from app.services.covid_service import fetch_covid_period_spread
 from datetime import datetime
 import psycopg2
+import os
 
 router = APIRouter(prefix="/api/powerbi", tags=["Power BI Dataset"])
 
@@ -40,7 +41,13 @@ def export_powerbi_dataset(year: str = None):
         infections = []
         
         # 일반 법정감염병 월별 데이터 (PostgreSQL dbt Fact 테이블에서 직접 조회)
-        conn = psycopg2.connect(host="127.0.0.1", port="5433", dbname="sentinel_db", user="sentinel", password="sentinel_password")
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "127.0.0.1"), 
+            port=os.getenv("DB_PORT", "5433"), 
+            dbname=os.getenv("DB_NAME", "sentinel_db"), 
+            user=os.getenv("DB_USER", "sentinel"), 
+            password=os.getenv("DB_PASS", "sentinel_password")
+        )
         cur = conn.cursor()
         
         # DB에 존재하는 가장 최신 연도 확인 ('계' 등 예외 문자열 제외)
