@@ -79,3 +79,8 @@ client_source.txt
 # Summary/ (GitHub 업로드를 위해 주석 처리)
 de_venv/
 Summary/
+
+# 8. dbt (Data Build Tool)
+# ------------------------------------------------------------------------------
+disease_dbt/target/
+disease_dbt/dbt_packages/
