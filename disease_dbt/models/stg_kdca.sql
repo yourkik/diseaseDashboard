@@ -5,7 +5,7 @@ WITH raw_source AS (
     SELECT 
         id as raw_id,
         region_name,
-        loaded_at,
+        created_at as loaded_at,
         raw_payload
     FROM {{ source('raw', 'kdca_region_status') }}
 ),
