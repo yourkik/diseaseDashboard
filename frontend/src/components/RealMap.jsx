@@ -51,8 +51,8 @@ export default function RealMap({ diseaseName }) {
     const fetchSpreadData = async () => {
       setLoading(true);
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${diseaseName}&year=${selectedYear}`);
+        const baseUrl = 'http://127.0.0.1:8000'; 
+        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${diseaseName}&year=${year}&week=${week}`);
         if (!res.ok) throw new Error("Backend server error");
         
         const data = await res.json();
