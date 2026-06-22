@@ -6,12 +6,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import joblib
-import wandb
 
 def train_covid_model():
-    # covid 전용 프로젝트로 wandb 세팅
-    run = wandb.init(project="covid-xgboost-tuning", entity="jiminyoun816-none")
-    config = run.config
+    final_config = {
+        "n_estimators": 1200,
+        "learning_rate": 0.05,
+        "max_depth": 9,
+        "min_child_weight": 15,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "reg_alpha": 1,
+        "reg_lambda": 5
+    }
 
     CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
     covid_data_path = os.path.join(CURRENT_DIR, "data", "processed_covid_data.csv")
@@ -52,12 +58,14 @@ def train_covid_model():
     y_train_log = np.log1p(y_train)
     
     reg_model = xgb.XGBRegressor(
-        n_estimators=config.get('n_estimators', 1000),
-        learning_rate=config.get('learning_rate', 0.03),
-        max_depth=config.get('max_depth', 7),
-        subsample=config.get('subsample', 0.8),
-        colsample_bytree=config.get('colsample_bytree', 0.8),
-        min_child_weight=config.get('min_child_weight', 1),
+        n_estimators=final_config["n_estimators"],
+        learning_rate=final_config["learning_rate"],
+        max_depth=final_config["max_depth"],
+        min_child_weight=final_config["min_child_weight"],
+        subsample=final_config["subsample"],
+        colsample_bytree=final_config["colsample_bytree"],
+        reg_alpha=final_config["reg_alpha"],
+        reg_lambda=final_config["reg_lambda"],
         random_state=42,
         n_jobs=-1
     )
@@ -89,18 +97,15 @@ def train_covid_model():
     print(f"평균값 대비 RMSE 오차 비율 : {ratio:.2f} %")
     print("=" * 60)
     
-    metrics = {"R2_Score": r2, "MAE": mae, "RMSE": rmse, "Error_Ratio": ratio}
-    wandb.log(metrics)
     
-    # 결과 리포트 아카이빙
     result_file = os.path.join(CURRENT_DIR, "covid_performance_report.csv")
     current_result = {
-        "run_id": run.id,
-        "n_estimators": config.get('n_estimators'),
-        "learning_rate": config.get('learning_rate'),
-        "max_depth": config.get('max_depth'),
-        "subsample": config.get('subsample'),
-        "colsample_bytree": config.get('colsample_bytree'),
+        "run_id": "local_final_run",
+        "n_estimators": final_config["n_estimators"],
+        "learning_rate": final_config["learning_rate"],
+        "max_depth": final_config["max_depth"],
+        "subsample": final_config["subsample"],
+        "colsample_bytree": final_config["colsample_bytree"],
         "R2_Score": round(r2, 4),
         "MAE": round(mae, 4),
         "RMSE": round(rmse, 4),
@@ -113,23 +118,6 @@ def train_covid_model():
     else:
         df_res.to_csv(result_file, mode='a', header=False, index=False, encoding='utf-8-sig')
         
-    run.finish()
 
 if __name__ == "__main__":
-    if wandb.run is None:
-        class DummyConfig:
-            def get(self, key, default=None): 
-                return default
-                
-        class DummyRun:
-            config = DummyConfig()
-            id = "covid_local_test"
-            def finish(self): pass
-            def log(self, metrics):
-                print(f"[Local Only] wandb 로그 전송 생략됨: {metrics}")
-        
-        dummy = DummyRun()
-        wandb.init = lambda **kwargs: dummy
-        wandb.log = lambda metrics: dummy.log(metrics)
-        
     train_covid_model()
