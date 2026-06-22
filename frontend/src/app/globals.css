@@ -1,15 +1,15 @@
 /* src/app/globals.css */
 :root {
-  --bg-dark: #0a0f18;
-  --bg-card: rgba(20, 25, 40, 0.6);
-  --border-glow: rgba(70, 100, 255, 0.2);
-  --text-main: #f0f4f8;
-  --text-muted: #94a3b8;
-  --accent: #3b82f6;
-  --accent-hover: #60a5fa;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --success: #10b981;
+  --bg-dark: #f8fafc;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --border-glow: rgba(59, 130, 246, 0.15);
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --success: #059669;
 }
 
 * {
@@ -124,7 +124,7 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: space-between;
   align-items: center;
   padding: 20px 40px;
-  background: rgba(10, 15, 24, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-glow);
   position: sticky;

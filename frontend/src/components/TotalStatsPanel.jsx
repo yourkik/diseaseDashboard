@@ -49,15 +49,15 @@ export default function TotalStatsPanel({ diseaseName }) {
     if (active && payload && payload.length) {
       return (
         <div style={{
-          backgroundColor: 'rgba(15, 23, 42, 0.9)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          border: '1px solid #cbd5e1',
           borderRadius: '8px',
-          padding: '12px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-          color: '#f8fafc'
+          padding: '16px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+          color: '#1e293b'
         }}>
-          <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: '#94a3b8' }}>{label}</p>
-          <p style={{ margin: 0, fontWeight: 'bold', color: '#38bdf8', fontSize: '1.1rem' }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '0.95rem', fontWeight: '600', color: '#64748b' }}>{label}</p>
+          <p style={{ margin: 0, fontWeight: 'bold', color: '#2563eb', fontSize: '1.3rem' }}>
             {payload[0].value.toLocaleString()}명
           </p>
         </div>
@@ -70,18 +70,18 @@ export default function TotalStatsPanel({ diseaseName }) {
 
   return (
     <div style={{
-      backgroundColor: 'rgba(30, 41, 59, 0.7)',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
       backdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
+      border: '1px solid #e2e8f0',
       borderRadius: '16px',
       padding: '24px',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-      color: '#f8fafc',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.05)',
+      color: '#0f172a',
       marginBottom: '20px',
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <h3 style={{ margin: '0 0 20px 0', fontSize: '1.3rem', fontWeight: 'bold', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
         📊 전국 단위 발생 지표
       </h3>
       
@@ -98,58 +98,60 @@ export default function TotalStatsPanel({ diseaseName }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
             {/* 누적 확진자 수 카드 */}
             <div style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              backgroundColor: '#f8fafc',
               borderRadius: '12px',
-              padding: '16px',
-              border: '1px solid rgba(255,255,255,0.05)'
+              padding: '20px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
             }}>
-              <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '8px' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#64748b', marginBottom: '8px' }}>
                 당해 누적 확진자 수
               </div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#f8fafc', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                {data.total_count.toLocaleString()} <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'normal' }}>명</span>
+              <div style={{ fontSize: '2.2rem', fontWeight: 'bold', color: '#0f172a', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                {data.total_count.toLocaleString()} <span style={{ fontSize: '1rem', color: '#94a3b8', fontWeight: 'normal' }}>명</span>
               </div>
             </div>
 
             {/* 10만 명당 발생률 카드 */}
             <div style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              backgroundColor: '#f8fafc',
               borderRadius: '12px',
-              padding: '16px',
-              border: '1px solid rgba(255,255,255,0.05)'
+              padding: '20px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
             }}>
-              <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '8px' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#64748b', marginBottom: '8px' }}>
                 10만 명당 발생률
               </div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#f8fafc', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                {data.incidence_rate.toFixed(1)} <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 'normal' }}>명</span>
+              <div style={{ fontSize: '2.2rem', fontWeight: 'bold', color: '#0f172a', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                {data.incidence_rate.toFixed(1)} <span style={{ fontSize: '1rem', color: '#94a3b8', fontWeight: 'normal' }}>명</span>
               </div>
             </div>
           </div>
 
           {/* 시계열 꺾은선 차트 영역 */}
           {data.monthly_trend && data.monthly_trend.length > 0 ? (
-            <div style={{ height: '220px', width: '100%', marginTop: '10px' }}>
-              <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '12px' }}>월별 발생 추이 ({data.year}년)</div>
+            <div style={{ height: '240px', width: '100%', marginTop: '15px' }}>
+              <div style={{ fontSize: '1rem', fontWeight: '600', color: '#475569', marginBottom: '16px' }}>월별 발생 추이 ({data.year}년)</div>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data.monthly_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#38bdf8" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <XAxis 
                     dataKey="period" 
                     tickFormatter={formatXAxis} 
-                    stroke="#475569" 
-                    tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                    stroke="#cbd5e1" 
+                    tick={{ fill: '#64748b', fontSize: 13, fontWeight: '500' }} 
                     axisLine={false} 
                     tickLine={false}
                   />
                   <YAxis 
-                    stroke="#475569" 
-                    tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                    stroke="#cbd5e1" 
+                    tick={{ fill: '#64748b', fontSize: 13, fontWeight: '500' }} 
                     axisLine={false} 
                     tickLine={false}
                   />
@@ -157,7 +159,7 @@ export default function TotalStatsPanel({ diseaseName }) {
                   <Area 
                     type="monotone" 
                     dataKey="count" 
-                    stroke="#38bdf8" 
+                    stroke="#3b82f6" 
                     strokeWidth={3}
                     fillOpacity={1} 
                     fill="url(#colorCount)" 

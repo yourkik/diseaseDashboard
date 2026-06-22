@@ -9,7 +9,7 @@ load_dotenv()
 
 # 2. 라우터 및 서비스 레이어 임포트
 from app.api import predict
-from app.routers import disease_stats, ai_insights, powerbi
+from app.routers import disease_stats, ai_insights, powerbi, ews
 from app.services.ingestion import fetch_kdca_stats, get_integrated_news, fetch_kdca_disease_contents
 from app.services.scheduler import start_scheduler, stop_scheduler
 
@@ -40,6 +40,7 @@ app.include_router(predict.router, prefix="/api")
 app.include_router(disease_stats.router)
 app.include_router(ai_insights.router)
 app.include_router(powerbi.router)
+app.include_router(ews.router)
 
 @app.get("/")
 def read_root():

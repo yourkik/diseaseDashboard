@@ -28,3 +28,4 @@ jobs:
           output_location: "out" # Next.js의 output: 'export' 빌드 결과물 위치
         env:
           NEXT_PUBLIC_API_URL: https://disease-dashboard-web-ghamd5h3e4cub0c9.koreacentral-01.azurewebsites.net
+          NEXT_PUBLIC_AZURE_MAPS_KEY: ${{ secrets.AZURE_MAPS_KEY }}

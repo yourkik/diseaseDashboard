@@ -27,9 +27,19 @@ def analyze_disease_risk_with_grounding(disease_keyword="독감"):
         
         thread = project_client.agents.threads.create()
         
+        from app.services.cosmos_service import get_latest_news_from_cosmos
+        cosmos_news = get_latest_news_from_cosmos(disease=disease_keyword, limit=5)
+        cosmos_context = ""
+        if cosmos_news:
+            cosmos_context = "\n[사전 수집된 자체 DB 뉴스 데이터]\n"
+            for news in cosmos_news:
+                date_str = news.get('published_at', '')[:10] if news.get('published_at') else ''
+                cosmos_context += f"- {date_str}: {news.get('title', '')} ({news.get('reason', '')})\n"
+            cosmos_context += "\n위 [사전 수집된 자체 DB 뉴스 데이터]를 최우선으로 참고하여 답변을 작성하고, 추가적인 정보나 최신 동향 파악이 필요할 때만 Bing Search를 사용하여 답변을 보완해주세요.\n"
+
         prompt = f"""
 당신은 통계 분석 봇입니다. 최신 뉴스를 검색하여 한국의 '{disease_keyword}' 관련 동향을 아래 3가지 항목으로 구조화하여 추출해 주세요.
-
+{cosmos_context}
 주의: 주관적인 해석이나 조언을 절대 추가하지 마세요. 오직 언론에 보도된 숫자, 발표된 팩트, 공식 기관의 안내사항만 그대로 요약해야 합니다.
 
 1. 최근 언론 보도 요약 (최근 확진자 수 변화, 주요 발생 지역 등 기사에 보도된 팩트)

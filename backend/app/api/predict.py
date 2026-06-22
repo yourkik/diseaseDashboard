@@ -27,25 +27,41 @@ class RegionPredictionRequest(BaseModel):
     week: int
     region: str
 
+# 에셋 로드 (파일이 없을 경우 None 처리하여 서버 구동 실패 방지)
+def safe_load_joblib(filename):
+    path = os.path.join(MODEL_DIR, filename)
+    return joblib.load(path) if os.path.exists(path) else None
+
+def safe_load_xgb(model_class, filename):
+    path = os.path.join(MODEL_DIR, filename)
+    if os.path.exists(path):
+        model = model_class()
+        model.load_model(path)
+        return model
+    return None
+
+def safe_load_csv(filename):
+    path = os.path.join(DATA_DIR, filename)
+    return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
+
 # 일반 질병용 에셋 로드
-le_region = joblib.load(os.path.join(MODEL_DIR, "le_region.joblib"))
-le_disease = joblib.load(os.path.join(MODEL_DIR, "le_disease.joblib"))
-
-clf_model = xgb.XGBClassifier()
-clf_model.load_model(os.path.join(MODEL_DIR, "hurdle_classifier.json"))
-
-reg_model = xgb.XGBRegressor()
-reg_model.load_model(os.path.join(MODEL_DIR, "hurdle_regressor.json"))
+le_region = safe_load_joblib("le_region.joblib")
+le_disease = safe_load_joblib("le_disease.joblib")
+clf_model = safe_load_xgb(xgb.XGBClassifier, "hurdle_classifier.json")
+reg_model = safe_load_xgb(xgb.XGBRegressor, "hurdle_regressor.json")
 
 # COVID 전용 에셋 로드
-le_region_covid = joblib.load(os.path.join(MODEL_DIR, "le_region_covid.joblib"))
-
-covid_model = xgb.XGBRegressor()
-covid_model.load_model(os.path.join(MODEL_DIR, "covid_regressor.json"))
+le_region_covid = safe_load_joblib("le_region_covid.joblib")
+covid_model = safe_load_xgb(xgb.XGBRegressor, "covid_regressor.json")
 
 # 최신 시계열 래그 피처 추적용 데이터셋 로드
-master_df = pd.read_csv(os.path.join(DATA_DIR, "processed_master_data.csv"))
-covid_df = pd.read_csv(os.path.join(DATA_DIR, "processed_covid_data.csv"))
+master_df = safe_load_csv("processed_master_data.csv")
+covid_df = safe_load_csv("processed_covid_data.csv")
+
+def check_models_loaded():
+    if clf_model is None or covid_model is None:
+        raise HTTPException(status_code=503, detail="AI 예측 모델(JSON)이 아직 생성되지 않았습니다. 머신러닝 파이프라인을 먼저 실행해 주세요.")
+
 
 
 def extract_lag_features(df_source, region_name, disease_name=None, is_covid=False):
@@ -71,6 +87,7 @@ def extract_lag_features(df_source, region_name, disease_name=None, is_covid=Fal
 
 @router.post("/top-danger")
 async def get_top_danger(req: PredictionRequest):
+    check_models_loaded()
     disease = "코로나19" if req.disease in ["코로나19", "covid", "COVID"] else req.disease
     is_covid = (disease == "코로나19")
     
@@ -123,6 +140,7 @@ async def get_top_danger(req: PredictionRequest):
 
 @router.post("/region")
 async def get_region_prediction(req: RegionPredictionRequest):
+    check_models_loaded()
     disease = "코로나19" if req.disease in ["코로나19", "covid", "COVID"] else req.disease
     is_covid = (disease == "코로나19")
     

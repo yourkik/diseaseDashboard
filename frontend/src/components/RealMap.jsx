@@ -40,7 +40,7 @@ export default function RealMap({ diseaseName }) {
   const [rawData, setRawData] = useState({});
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
-  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedYear, setSelectedYear] = useState('2023');
 
   const isEbola = diseaseName === '에볼라';
   const currentCenter = isEbola ? [23.5, -2.5] : [127.6358, 36.2683];
@@ -88,7 +88,7 @@ export default function RealMap({ diseaseName }) {
           view: 'Auto',
           authOptions: {
             authType: 'subscriptionKey',
-            subscriptionKey: '44n60knzXdRYTfDitjX4a7my8ijv28PhSd40eVhceOXvcvAqm8dqJQQJ99CFACYeBjFUZlQXAAAgAZMPQ9Cw' 
+            subscriptionKey: process.env.NEXT_PUBLIC_AZURE_MAPS_KEY
           }
         });
 
@@ -359,8 +359,8 @@ export default function RealMap({ diseaseName }) {
             onChange={(e) => setSelectedYear(e.target.value)}
             style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: 'white', color: '#334155', fontWeight: 'bold', cursor: 'pointer', outline: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
           >
-            <option value="2024">2024년 동향</option>
             <option value="2023">2023년 동향</option>
+            <option value="2022">2022년 동향</option>
             <option value="전체">전체 누적 확인</option>
           </select>
           <div className="periodBadge" style={{ backgroundColor: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' }}>
