@@ -2,8 +2,6 @@
 
 from fastapi import APIRouter, HTTPException
 from app.services.medical_service import get_regional_infrastructure, get_demographic_age_real, get_demographic_gender_real
-from app.services.mobility_service import get_weekly_mobility_data
-from app.services.covid_service import fetch_covid_period_spread
 from datetime import datetime
 import psycopg2
 import os
@@ -34,10 +32,18 @@ def export_powerbi_dataset(year: str = None):
         demographics_age = get_demographic_age_real()
         demographics_gender = get_demographic_gender_real()
         
-        # 3. Fact_Mobility
-        mobility = get_weekly_mobility_data(int(year))
+        # 3. Fact_Mobility (DB에서 직접 조회)
+        cur.execute("SELECT period_str, region_name, traffic_volume FROM analytics.fact_mobility WHERE period_str LIKE %s", (f"{year}년%",))
+        mobility_rows = cur.fetchall()
+        mobility = []
+        for period, region, vol in mobility_rows:
+            mobility.append({
+                "region": region,
+                "month": period,
+                "traffic_volume": vol
+            })
         
-        # 4. Fact_Infections (KDCA DB + COVID API 병합)
+        # 4. Fact_Infections (KDCA DB)
         infections = []
         
         # 일반 법정감염병 월별 데이터 (PostgreSQL dbt Fact 테이블에서 직접 조회)
@@ -69,8 +75,19 @@ def export_powerbi_dataset(year: str = None):
         cur.close()
         conn.close()
         
+        current_year = datetime.now().year
+        current_month = datetime.now().month
+
         for period, region, disease, count in rows:
             if region != "합계" and region != "전국":
+                # 미래 데이터(현재 연도의 미래 월) 필터링
+                parts = period.split('년 ')
+                if len(parts) == 2:
+                    inf_y = int(parts[0])
+                    inf_m = int(parts[1].replace('월', '').strip())
+                    if inf_y == current_year and inf_m > current_month:
+                        continue # 미래 월 데이터는 건너뜀
+                        
                 infections.append({
                     "Date": period,
                     "Region": region,
@@ -78,18 +95,6 @@ def export_powerbi_dataset(year: str = None):
                     "Count": count
                 })
                     
-        # 코로나19 월별 데이터 (코로나 DB 연동 전까지 API 사용)
-        covid_data = fetch_covid_period_spread(start_year=year, end_year=year)
-        for item in covid_data:
-            sidoNm = item.get("sidoNm")
-            if sidoNm and sidoNm not in ["합계", "전국", "검역"]:
-                infections.append({
-                    "Date": item.get("period"),
-                    "Region": sidoNm,
-                    "Disease": "코로나19",
-                    "Count": safe_int(item.get("resultVal", 0))
-                })
-
         return {
             "Dim_Region": regions,
             "Fact_Demographics_Age": demographics_age,

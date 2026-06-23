@@ -38,17 +38,39 @@ export default function InfectionMap({ diseaseName }) {
   const [rawData, setRawData] = useState({});
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
+  const [availableYears, setAvailableYears] = useState(['전체']);
+  const [selectedYear, setSelectedYear] = useState('전체');
 
   const isEbola = diseaseName === '에볼라';
   const currentCenter = isEbola ? [23.5, -2.5] : [127.6358, 36.2683];
   const currentZoom = isEbola ? 4 : 6;
 
   useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${baseUrl}/api/stats/map/years?disease=${diseaseName}`);
+        if (res.ok) {
+          const years = await res.json();
+          setAvailableYears([...years, '전체']);
+          if (years.length > 0) {
+            setSelectedYear(years[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch years", err);
+      }
+    };
+    if (diseaseName) fetchYears();
+  }, [diseaseName]);
+
+  useEffect(() => {
     const fetchSpreadData = async () => {
       setLoading(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${encodeURIComponent(diseaseName)}`);
+        const yearParam = selectedYear === '전체' ? '' : selectedYear;
+        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${encodeURIComponent(diseaseName)}&year=${yearParam}`);
         if (!res.ok) throw new Error("Backend server error");
         
         const data = await res.json();
@@ -71,7 +93,7 @@ export default function InfectionMap({ diseaseName }) {
     };
     
     if (diseaseName) fetchSpreadData();
-  }, [diseaseName]);
+  }, [diseaseName, selectedYear]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -268,9 +290,11 @@ export default function InfectionMap({ diseaseName }) {
           </h2>
           <p className="mapSubtitle" style={{ color: '#475569', fontSize: '1rem', marginTop: '6px' }}>연간 누적 감염 현황 및 주요 확산 경로 추정</p>
         </div>
-        <div className="periodBadge">
-          <AlertTriangle color="#d97706" size={20} />
-          <span>{periodDisplay}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+          <div className="periodBadge">
+            <AlertTriangle color="#d97706" size={20} />
+            <span>{periodDisplay}</span>
+          </div>
         </div>
       </div>
 

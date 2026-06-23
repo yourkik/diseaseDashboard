@@ -119,7 +119,13 @@ def fetch_covid_period_spread(start_year, end_year):
     
     year_int = int(start_year) if start_year else 2026
     
-    for month in range(1, 13):
+    current_year = datetime.now().year
+    current_month = datetime.now().month
+    max_month = 12
+    if year_int == current_year:
+        max_month = current_month
+        
+    for month in range(1, max_month + 1):
         period_str = f"{year_int}년 {month:02d}월"
         weight = month_weights[month]
         

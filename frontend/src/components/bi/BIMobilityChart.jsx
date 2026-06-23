@@ -16,11 +16,26 @@ export default function BIMobilityChart({ mobility, infections, selectedDisease,
     // Process Mobility
     mobility.forEach(m => {
       if (selectedRegion !== "전체" && m.region !== selectedRegion) return;
-      const weekStr = m.week; // "2023-W01"
-      const weekNum = parseInt(weekStr.split('-W')[1], 10);
-      let monthNum = Math.ceil(weekNum / 4.33);
-      if (monthNum > 12) monthNum = 12;
-      monthlyData[`${monthNum}월`].mobility += m.traffic_volume;
+      
+      const period = m.month || m.week; // 호환성 유지 (week가 넘어올 경우 대비)
+      if (period) {
+        if (period.includes('년')) {
+          // "2026년 01월" 형식 처리
+          const parts = period.split(' ');
+          if (parts.length > 1) {
+            const mStr = parts[1].replace('0', ''); // "05월" -> "5월"
+            if (monthlyData[mStr]) {
+              monthlyData[mStr].mobility += m.traffic_volume;
+            }
+          }
+        } else if (period.includes('-W')) {
+          // 구버전 "2023-W01" 형식 처리
+          const weekNum = parseInt(period.split('-W')[1], 10);
+          let monthNum = Math.ceil(weekNum / 4.33);
+          if (monthNum > 12) monthNum = 12;
+          monthlyData[`${monthNum}월`].mobility += m.traffic_volume;
+        }
+      }
     });
 
     // Process Infections

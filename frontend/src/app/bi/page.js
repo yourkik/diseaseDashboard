@@ -11,14 +11,38 @@ export default function BIDashboardPage() {
   const [error, setError] = useState(null);
 
   // Cross-filtering states
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [selectedDisease, setSelectedDisease] = useState("전체");
   const [selectedRegion, setSelectedRegion] = useState("전체");
+  const [availableYears, setAvailableYears] = useState([]);
 
+  // 연도 목록 가져오기
   useEffect(() => {
-    const fetchDataset = async () => {
+    const fetchYears = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const response = await fetch(`${baseUrl}/api/powerbi/dataset`);
+        const response = await fetch(`${baseUrl}/api/stats/map/years`);
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableYears(data.years || [new Date().getFullYear().toString()]);
+          if (data.years && data.years.length > 0 && !data.years.includes(selectedYear)) {
+            setSelectedYear(data.years[0]);
+          }
+        }
+      } catch (err) {
+        console.error("연도 목록 로드 실패:", err);
+      }
+    };
+    fetchYears();
+  }, []);
+
+  // 데이터셋 가져오기
+  useEffect(() => {
+    const fetchDataset = async () => {
+      setLoading(true);
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${baseUrl}/api/powerbi/dataset?year=${selectedYear}`);
         if (!response.ok) throw new Error("BI 데이터셋을 불러오는데 실패했습니다.");
         const data = await response.json();
         setDataset(data);
@@ -29,9 +53,9 @@ export default function BIDashboardPage() {
       }
     };
     fetchDataset();
-  }, []);
+  }, [selectedYear]);
 
-  const diseaseOptions = ["전체", "코로나19", "수두", "백일해", "유행성이하선염"];
+  const diseaseOptions = ["전체", "수두", "백일해", "유행성이하선염"];
   
   // Extract unique regions from Dim_Region
   const regionOptions = useMemo(() => {
@@ -65,6 +89,17 @@ export default function BIDashboardPage() {
 
       {/* Slicers (Filters) */}
       <div className="glass-card" style={{ marginBottom: '24px', display: 'flex', gap: '32px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <label style={{ color: '#94a3b8', fontWeight: 'bold' }}>📅 분석 연도:</label>
+          <select 
+            value={selectedYear} 
+            onChange={(e) => setSelectedYear(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(15,23,42,0.8)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            {availableYears.length > 0 ? availableYears.map(y => <option key={y} value={y}>{y}년</option>) : <option value={selectedYear}>{selectedYear}년</option>}
+          </select>
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <label style={{ color: '#94a3b8', fontWeight: 'bold' }}>💉 분석 질병:</label>
           <select 

@@ -29,6 +29,45 @@ def safe_float(val):
 
 router = APIRouter(prefix="/api/stats/map", tags=["Map Stats"])
 
+@router.get("/years")
+def get_available_years(disease: str):
+    """
+    실제 DB에 저장된 특정 질병의 데이터 연도 목록을 반환합니다.
+    """
+    try:
+        api_disease_name = DISEASE_MAPPING.get(disease, disease)
+        
+        # 에볼라나 코로나는 DB가 아닌 실시간/글로벌 데이터이므로 현재 연도만 반환
+        if api_disease_name == "에볼라바이러스병" or api_disease_name == "코로나바이러스감염증-19":
+            return [str(datetime.now().year)]
+            
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "127.0.0.1"), 
+            port=os.getenv("DB_PORT", "5433"), 
+            dbname=os.getenv("DB_NAME", "sentinel_db"), 
+            user=os.getenv("DB_USER", "sentinel"), 
+            password=os.getenv("DB_PASS", "sentinel_password")
+        )
+        cur = conn.cursor()
+        
+        if api_disease_name == "전체":
+            cur.execute("SELECT DISTINCT EXTRACT(YEAR FROM date) FROM analytics.fact_infections ORDER BY 1 DESC")
+        else:
+            cur.execute("SELECT DISTINCT EXTRACT(YEAR FROM date) FROM analytics.fact_infections WHERE disease_name = %s ORDER BY 1 DESC", (api_disease_name,))
+            
+        rows = cur.fetchall()
+        years = [str(int(r[0])) for r in rows if r[0] is not None]
+        
+        cur.close()
+        conn.close()
+        
+        if not years:
+            return [str(datetime.now().year)]
+        return years
+    except Exception as e:
+        print(f"DB Error (/years): {e}")
+        return [str(datetime.now().year)]
+
 @router.get("/status")
 def get_map_status(disease: str, year: Optional[str] = None):
     """
@@ -91,6 +130,34 @@ def get_map_status(disease: str, year: Optional[str] = None):
             cur.execute(query, tuple(params))
             rows = cur.fetchall()
             
+            # 기간 문자열 구하기 (DB의 날짜가 연말(12-31)로 뭉뚱그려져 있으므로 동적으로 예쁘게 포맷팅)
+            period_str = "DB 최신 누적 데이터"
+            try:
+                date_q = "SELECT DISTINCT EXTRACT(YEAR FROM date) FROM analytics.fact_infections"
+                date_params = []
+                filters = []
+                if api_disease_name != "전체":
+                    filters.append("disease_name = %s")
+                    date_params.append(api_disease_name)
+                    
+                if filters:
+                    date_q += " WHERE " + " AND ".join(filters)
+                    
+                cur.execute(date_q, tuple(date_params))
+                date_rows = cur.fetchall()
+                if date_rows:
+                    max_year = int(max([r[0] for r in date_rows if r[0]]))
+                    current_year = datetime.now().year
+                    
+                    if max_year == current_year:
+                        # 현재 연도면 1월 1일부터 오늘까지
+                        period_str = f"{max_year}-01-01 ~ {datetime.now().strftime('%Y-%m-%d')}"
+                    else:
+                        # 과거 연도면 1월 1일부터 12월 31일까지
+                        period_str = f"{max_year}-01-01 ~ {max_year}-12-31"
+            except Exception as e:
+                print(f"Failed to get dates: {e}")
+            
             for row in rows:
                 region = row[0]
                 # 프론트엔드가 요구하는 형식에 맞추어 변환
@@ -98,7 +165,7 @@ def get_map_status(disease: str, year: Optional[str] = None):
                     "region": region,
                     "count": row[1],
                     "new_cases": row[2],
-                    "period": "DB 최신 누적 데이터"
+                    "period": period_str
                 })
                 
             cur.close()
@@ -177,20 +244,28 @@ def get_map_spread(disease: str, year: Optional[str] = None, period_type: str = 
             cur = conn.cursor()
             
             if api_disease_name == "전체":
-                cur.execute("""
+                query = """
                     SELECT period_str, region_name, SUM(total_cases)
                     FROM analytics.fact_spread_timeline
-                    GROUP BY period_str, region_name
-                    ORDER BY period_str ASC
-                """)
+                """
+                params = []
+                if year and year != "전체":
+                    query += " WHERE period_str LIKE %s "
+                    params.append(f"{year}%")
+                query += " GROUP BY period_str, region_name ORDER BY period_str ASC "
+                cur.execute(query, tuple(params))
             else:
-                # 전체 시계열 데이터를 가져옵니다.
-                cur.execute("""
+                query = """
                     SELECT period_str, region_name, total_cases
                     FROM analytics.fact_spread_timeline
                     WHERE disease_name = %s
-                    ORDER BY period_str ASC
-                """, (api_disease_name,))
+                """
+                params = [api_disease_name]
+                if year and year != "전체":
+                    query += " AND period_str LIKE %s "
+                    params.append(f"{year}%")
+                query += " ORDER BY period_str ASC "
+                cur.execute(query, tuple(params))
             rows = cur.fetchall()
             cur.close()
             conn.close()
@@ -207,9 +282,13 @@ def get_map_spread(disease: str, year: Optional[str] = None, period_type: str = 
                 "count": count
             })
             
-        # 가장 최근 6개월만 슬라이싱
+        # 연도가 지정된 경우 슬라이싱 없이 전체 기간을 보여주고,
+        # 연도 지정이 없다면(전체 조회시) 가장 최근 6개월만 슬라이싱
         sorted_periods = sorted(timeline_result.keys())
-        recent_periods = sorted_periods[-6:] if len(sorted_periods) > 6 else sorted_periods
+        if year and year != "전체":
+            recent_periods = sorted_periods
+        else:
+            recent_periods = sorted_periods[-6:] if len(sorted_periods) > 6 else sorted_periods
         
         sorted_timeline = {k: timeline_result[k] for k in recent_periods}
         return sorted_timeline
@@ -283,14 +362,18 @@ def get_total_stats(disease: str, year: Optional[str] = None):
                     total_count = int(row[0])
                     incidence_rate = round((total_count / 51000000) * 100000, 2)
                     
-                # 월별 전국 합산 (최근 6개월)
-                cur.execute("""
+                # 월별 전국 합산 (조건에 맞는 연도만 필터링)
+                query = """
                     SELECT period_str, SUM(total_cases)
                     FROM analytics.fact_spread_timeline
                     WHERE disease_name = %s
-                    GROUP BY period_str
-                    ORDER BY period_str ASC
-                """, (api_disease_name,))
+                """
+                params = [api_disease_name]
+                if year and year != "전체":
+                    query += " AND period_str LIKE %s "
+                    params.append(f"{year}%")
+                query += " GROUP BY period_str ORDER BY period_str ASC "
+                cur.execute(query, tuple(params))
             rows = cur.fetchall()
             cur.close()
             conn.close()
@@ -301,8 +384,11 @@ def get_total_stats(disease: str, year: Optional[str] = None):
                     "count": count
                 })
                 
-            # 최근 6개월 슬라이싱
-            monthly_trend = monthly_trend[-6:] if len(monthly_trend) > 6 else monthly_trend
+            # 연도 지정 시 전체 월 표시, 미지정 시 최근 6개월만
+            if year and year != "전체":
+                monthly_trend = monthly_trend
+            else:
+                monthly_trend = monthly_trend[-6:] if len(monthly_trend) > 6 else monthly_trend
         except Exception as db_err:
             print(f"[System] DB 연결 실패 (/total): {db_err}")
 
