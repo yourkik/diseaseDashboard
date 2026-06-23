@@ -3,6 +3,7 @@ from typing import Optional
 from app.services.kdca_service import fetch_kdca_region_status
 from app.services.covid_service import fetch_covid_region_status, fetch_covid_period_spread
 from app.services.ebola_service import fetch_ebola_region_status
+from app.services.medical_service import get_regional_infrastructure
 from datetime import datetime
 import psycopg2
 import os
@@ -158,14 +159,25 @@ def get_map_status(disease: str, year: Optional[str] = None):
             except Exception as e:
                 print(f"Failed to get dates: {e}")
             
+            # 지역별 인구 데이터 가져오기 (비율 계산용)
+            infrastructure = get_regional_infrastructure()
+            pop_map = {item["region"]: item["population"] for item in infrastructure}
+            
             for row in rows:
                 region = row[0]
+                count = row[1] if row[1] else 0
+                
+                # 발생률 계산: (확진자 수 / 인구) * 100,000
+                pop = pop_map.get(region, 0)
+                rate = round((count / pop) * 100000, 2) if pop > 0 else 0.0
+                
                 # 프론트엔드가 요구하는 형식에 맞추어 변환
                 result.append({
                     "region": region,
-                    "count": row[1],
-                    "new_cases": row[2],
-                    "period": period_str
+                    "count": count,
+                    "new_cases": row[2] if row[2] else 0,
+                    "period": period_str,
+                    "rate": rate
                 })
                 
             cur.close()

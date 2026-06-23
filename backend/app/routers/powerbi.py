@@ -32,6 +32,16 @@ def export_powerbi_dataset(year: str = None):
         demographics_age = get_demographic_age_real()
         demographics_gender = get_demographic_gender_real()
         
+        # DB 커넥션 생성
+        conn = psycopg2.connect(
+            host=os.getenv("DB_HOST", "127.0.0.1"), 
+            port=os.getenv("DB_PORT", "5433"), 
+            dbname=os.getenv("DB_NAME", "sentinel_db"), 
+            user=os.getenv("DB_USER", "sentinel"), 
+            password=os.getenv("DB_PASS", "sentinel_password")
+        )
+        cur = conn.cursor()
+        
         # 3. Fact_Mobility (DB에서 직접 조회)
         cur.execute("SELECT period_str, region_name, traffic_volume FROM analytics.fact_mobility WHERE period_str LIKE %s", (f"{year}년%",))
         mobility_rows = cur.fetchall()
@@ -47,14 +57,6 @@ def export_powerbi_dataset(year: str = None):
         infections = []
         
         # 일반 법정감염병 월별 데이터 (PostgreSQL dbt Fact 테이블에서 직접 조회)
-        conn = psycopg2.connect(
-            host=os.getenv("DB_HOST", "127.0.0.1"), 
-            port=os.getenv("DB_PORT", "5433"), 
-            dbname=os.getenv("DB_NAME", "sentinel_db"), 
-            user=os.getenv("DB_USER", "sentinel"), 
-            password=os.getenv("DB_PASS", "sentinel_password")
-        )
-        cur = conn.cursor()
         
         # DB에 존재하는 가장 최신 연도 확인 ('계' 등 예외 문자열 제외)
         cur.execute("SELECT MAX(SUBSTRING(period_str, 1, 4)) FROM analytics.fact_spread_timeline WHERE period_str LIKE '20%'")
