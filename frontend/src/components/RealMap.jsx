@@ -51,16 +51,33 @@ export default function RealMap({ diseaseName }) {
     const fetchSpreadData = async () => {
       setLoading(true);
       try {
-        const baseUrl = 'http://127.0.0.1:8000'; 
-        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${diseaseName}&year=${year}&week=${week}`);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const yearParam = selectedYear === '전체' ? '' : selectedYear;
+        const res = await fetch(`${baseUrl}/api/stats/map/status?disease=${diseaseName}&year=${yearParam}`);
         if (!res.ok) throw new Error("Backend server error");
         
         const data = await res.json();
+        
+        const normalizeRegion = (name) => {
+          if (!name || name === "불명") return "전국";
+          if (name.includes("경상남도")) return "경남";
+          if (name.includes("경상북도")) return "경북";
+          if (name.includes("전라남도")) return "전남";
+          if (name.includes("전라북도") || name.includes("전북특별자치도")) return "전북";
+          if (name.includes("충청남도")) return "충남";
+          if (name.includes("충청북도")) return "충북";
+          if (name.includes("제주")) return "제주";
+          if (name.includes("세종")) return "세종";
+          if (name.includes("강원")) return "강원";
+          if (name.includes("도") && name.length === 1) return "전국";
+          return name.substring(0, 2);
+        };
+
         const totals = {};
         const rawMap = {};
         Object.values(data).forEach(item => {
-          let region = isEbola ? item.region : item.region.substring(0, 2); 
-          totals[region] = item.count;
+          let region = isEbola ? item.region : normalizeRegion(item.region); 
+          totals[region] = (totals[region] || 0) + item.count;
           rawMap[region] = item;
         });
         

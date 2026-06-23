@@ -160,76 +160,6 @@ export default function OverallMap() {
             closeButton: false
           });
 
-          // Bubble Layer (종합 확진자 수 기준 보라/빨강 톤)
-          const bubbleLayer = new window.atlas.layer.BubbleLayer(dataSource, null, {
-            filter: ['==', ['geometry-type'], 'Point'],
-            radius: ['get', 'radius'],
-            color: [
-              'step',
-              ['get', 'count'],
-              '#8b5cf6', // 보라색 (기본)
-              500, '#d946ef', // 핑크보라
-              2000, '#e11d48' // 빨강
-            ],
-            strokeColor: '#ffffff',
-            strokeWidth: 2,
-            opacity: 0.85
-          });
-
-          map.layers.add(bubbleLayer);
-
-          // Symbol Layer (지역명)
-          const symbolLayer = new window.atlas.layer.SymbolLayer(dataSource, null, {
-            filter: ['==', ['geometry-type'], 'Point'],
-            iconOptions: { image: 'none' },
-            textOptions: {
-              textField: ['get', 'label'],
-              color: '#0f172a',
-              size: 13,
-              haloColor: 'rgba(255,255,255,0.8)',
-              haloWidth: 2,
-              offset: [0, 0]
-            }
-          });
-
-          map.layers.add(symbolLayer);
-
-          // Tooltip Event
-          map.events.add('mousemove', bubbleLayer, (e) => {
-            if (e.shapes && e.shapes.length > 0) {
-              map.getCanvasContainer().style.cursor = 'pointer';
-              const shape = e.shapes[0];
-              const properties = shape.getProperties();
-              const coordinate = shape.getCoordinates();
-              
-              const popupContent = `
-                <div style="padding: 12px; font-family: sans-serif; min-width: 180px; background: white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; border-radius: 8px;">
-                  <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: bold; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">${properties.region}</h4>
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color: #64748b; font-size: 13px;">누적 확진</span>
-                    <span style="color: #a855f7; font-weight: bold;">${properties.count.toLocaleString()}명</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color: #64748b; font-size: 13px;">위험도</span>
-                    <span style="color: ${getRiskColor(properties.riskLevel)}; font-weight: bold;">${properties.riskLevel}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between;">
-                    <span style="color: #64748b; font-size: 13px;">징후/뉴스</span>
-                    <span style="color: #0f172a; font-weight: bold;">${properties.newsCount}건</span>
-                  </div>
-                </div>
-              `;
-
-              popupRef.current.setOptions({ content: popupContent, position: coordinate });
-              popupRef.current.open(map);
-            }
-          });
-
-          map.events.add('mouseleave', bubbleLayer, () => {
-            map.getCanvasContainer().style.cursor = '';
-            popupRef.current.close();
-          });
-
           setMapReady(true);
         });
       }
@@ -258,19 +188,10 @@ export default function OverallMap() {
     dataSourceRef.current.clear();
     newsSourceRef.current.clear();
     
-    const features = [];
-
-    const getRadius = (count) => {
-      if (count === 0) return 0;
-      if (count < 100) return 12 + (count / 100) * 5;
-      if (count < 1000) return 17 + ((count - 100) / 900) * 10;
-      return 27 + Math.min(count - 1000, 5000) / 5000 * 15; 
-    };
-
     // 마커 배열 (뉴스 뱃지)
     const htmlMarkers = [];
 
-    // 모든 지역을 순회하며 데이터나 뉴스가 있는지 확인 (확진자가 0명이어도 뉴스가 있으면 핀 표시)
+    // 모든 지역을 순회하며 데이터나 뉴스가 있는지 확인
     Object.keys(REGION_COORDS).forEach(region => {
       const coord = REGION_COORDS[region];
       const count = aggregatedData[region] || 0;
@@ -278,24 +199,9 @@ export default function OverallMap() {
       const riskLevel = regionStatusMap[region] || "Low";
 
       if (coord) {
-        // 확진자가 있는 경우 버블 데이터 추가
-        if (count > 0) {
-          features.push(new window.atlas.data.Feature(
-            new window.atlas.data.Point(coord),
-            {
-              region: region,
-              count: count,
-              riskLevel: riskLevel,
-              newsCount: newsCount,
-              radius: getRadius(count),
-              label: `${region}\n${count.toLocaleString()}명`
-            }
-          ));
-        }
-
-        // 뉴스 개수가 있으면 확진자 여부와 관계없이 핀(Pin) 모양의 HTML 마커를 띄움
+        // 뉴스 개수가 있으면 핀(Pin) 모양의 HTML 마커를 띄움
         if (newsCount > 0 && mapInstance.current) {
-          const offset = NEWS_OFFSET[region] || [15, -15];
+          const offset = NEWS_OFFSET[region] || [0, -10]; // 버블이 없어졌으므로 오프셋 최소화
           
           // 핀 모양 컨테이너 (문자열 템플릿 방식)
           const markerHtml = `
@@ -335,13 +241,38 @@ export default function OverallMap() {
               window.handleRegionSelect(region);
             }
           });
+
+          // 툴팁(Popup) 호버 이벤트 연결
+          mapInstance.current.events.add('mouseover', marker, () => {
+            const popupContent = `
+              <div style="padding: 12px; font-family: sans-serif; min-width: 180px; background: white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; border-radius: 8px;">
+                <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: bold; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">${region}</h4>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="color: #64748b; font-size: 13px;">누적 확진</span>
+                  <span style="color: #a855f7; font-weight: bold;">${count.toLocaleString()}명</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="color: #64748b; font-size: 13px;">위험도</span>
+                  <span style="color: ${getRiskColor(riskLevel)}; font-weight: bold;">${riskLevel}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b; font-size: 13px;">징후/뉴스</span>
+                  <span style="color: #0f172a; font-weight: bold;">${newsCount}건</span>
+                </div>
+              </div>
+            `;
+            popupRef.current.setOptions({ content: popupContent, position: coord });
+            popupRef.current.open(mapInstance.current);
+          });
+
+          mapInstance.current.events.add('mouseout', marker, () => {
+            popupRef.current.close();
+          });
           
           htmlMarkers.push(marker);
         }
       }
     });
-
-    dataSourceRef.current.add(features);
 
     if (mapInstance.current) {
       mapInstance.current.markers.clear();
