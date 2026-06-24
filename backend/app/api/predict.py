@@ -187,7 +187,7 @@ async def get_region_prediction(req: RegionPredictionRequest):
         raise HTTPException(status_code=400, detail="학습 모델 매트릭스에 존재하지 않는 지역명입니다.")
         
     lag_1, lag_2, lag_3, rolling_mean = extract_lag_features(
-        target_df, req.region, disease, eval_year, eval_week, is_covid=is_covid
+        target_df, req.region, disease, is_covid=is_covid
     )
     
     if is_covid:
@@ -206,7 +206,7 @@ async def get_region_prediction(req: RegionPredictionRequest):
         }])
         
         prob_positive = clf_model.predict_proba(features)[0][1]
-        if prob_positive >= 0.15:
+        if prob_positive >= 0.01:
             pred_log = reg_model.predict(features)[0]
             pred_cases = int(np.clip(np.expm1(pred_log), 0, None))
         else:
