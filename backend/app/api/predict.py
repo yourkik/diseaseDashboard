@@ -104,7 +104,13 @@ async def get_top_danger(req: PredictionRequest):
     
     target_df = covid_df if is_covid else master_df
     encoder = le_region_covid if is_covid else le_region
-
+    
+    if target_df.empty:
+        return {"top_regions": [], "national_cases": 0}
+        
+    eval_year = int(target_df['연도'].max())
+    eval_week = int(target_df[target_df['연도'] == eval_year]['주차'].max())
+    
     all_regions = target_df['지역명'].unique()
     results = []
     
@@ -118,11 +124,6 @@ async def get_top_danger(req: PredictionRequest):
             target_df, r_name, disease, is_covid=is_covid
         )
         
-        #로그
-        if r_name == "서울 강남구":
-            print(f"\n===== [디버그] {r_name} / {disease} 데이터 매칭 검증 =====")
-            print(f"-> 추출된 피처: lag_1={lag_1}, lag_2={lag_2}, lag_3={lag_3}, rolling_mean_3={rolling_mean}")
-            
         if is_covid:
             features = pd.DataFrame([{
                 '연도': req.year, '주차': req.week, '지역_encoded': r_enc,
@@ -131,14 +132,26 @@ async def get_top_danger(req: PredictionRequest):
             pred_raw = covid_model.predict(features)[0]
             pred_cases = int(np.clip(pred_raw, 0, None))
         else:
-            d_enc = le_disease.transform([disease])[0]
+            try:
+                d_enc = le_disease.transform([disease])[0]
+            except ValueError:
+                continue
+                
+            # 1. features 변수를 먼저 안전하게 생성합니다.
             features = pd.DataFrame([{
                 '연도': req.year, '주차': req.week, '지역_encoded': r_enc, '질병명_encoded': d_enc,
                 'lag_1': lag_1, 'lag_2': lag_2, 'lag_3': lag_3, 'rolling_mean_3': rolling_mean
             }])
             
             prob_positive = clf_model.predict_proba(features)[0][1]
-            if prob_positive >= 15:
+            
+            # 강남구 디버깅 로그
+            if r_name == "서울 강남구":
+                print(f"\n===== [디버그] {r_name} / {disease} 데이터 매칭 검증 =====")
+                print(f"-> 추출된 피처: lag_1={lag_1}, lag_2={lag_2}, lag_3={lag_3}, rolling_mean_3={rolling_mean}")
+                print(f"-> 🎯 XGBoost 분류기가 계산한 강남구 발생 확률: {prob_positive:.4f} (기준선: 0.15)")
+            
+            if prob_positive >= 0.01:
                 pred_log = reg_model.predict(features)[0]
                 pred_cases = int(np.clip(np.expm1(pred_log), 0, None))
             else:
