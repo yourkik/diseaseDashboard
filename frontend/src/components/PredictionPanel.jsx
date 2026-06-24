@@ -18,6 +18,7 @@ export default function PredictionPanel({ diseaseName }) {
   const [loadingSearch, setLoadingSearch] = useState(false);
 
   const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/api';
+  const AI_BACKEND_URL = 'http://localhost:8001/api';
   const isPredictable = ['수두', '백일해', '유행성이하선염', '코로나19', 'covid'].includes(diseaseName);
 
   useEffect(() => {
@@ -74,7 +75,7 @@ export default function PredictionPanel({ diseaseName }) {
     const { year, week } = getSelectedTime();
     setLoadingTop(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/predict/top-danger`, {
+      const res = await fetch(`${AI_BACKEND_URL}/predict/top-danger`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ disease: diseaseName, year, week })
@@ -101,7 +102,7 @@ export default function PredictionPanel({ diseaseName }) {
     const { year, week } = getSelectedTime();
     setLoadingSearch(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/predict/region`, {
+      const res = await fetch(`${AI_BACKEND_URL}/predict/region`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ disease: diseaseName, year, week, region: searchRegion })
@@ -227,7 +228,10 @@ export default function PredictionPanel({ diseaseName }) {
           <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#fff' }}>{nationalCases} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>건</span></div>
           
           {/* 전주 대비 상승/하락 조건부 렌더링 팩터 */}
-          {diff > 0 ? (
+          {!prevNationalCases || prevNationalCases === 0 ? (
+            // 지난주 데이터가 없거나 0일 때는 깔끔하게 회색 대시(-) 처리
+            <div style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 'bold' }}>-</div>
+          ) : diff > 0 ? (
             <div style={{ color: '#ef4444', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px' }}>
               ▲ {diff}건 상승
             </div>

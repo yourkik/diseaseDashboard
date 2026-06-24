@@ -42,6 +42,11 @@ def safe_load_xgb(model_class, filename):
 
 def safe_load_csv(filename):
     path = os.path.join(DATA_DIR, filename)
+    if os.path.exists(path):
+        df = pd.read_csv(path)
+        if '지역명' in df.columns:
+            df = df[~df['지역명'].str.contains('전체', na=False)]
+        return df
     return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
 
 # 일반 질병용 에셋 로드
@@ -105,6 +110,11 @@ async def get_top_danger(req: PredictionRequest):
             
         lag_1, lag_2, lag_3, rolling_mean = extract_lag_features(target_df, r_name, disease, is_covid)
         
+        #로그
+        if r_name == "서울 강남구":
+            print(f"\n===== [디버그] {r_name} / {disease} 데이터 매칭 검증 =====")
+            print(f"-> 추출된 피처: lag_1={lag_1}, lag_2={lag_2}, lag_3={lag_3}, rolling_mean_3={rolling_mean}")
+            
         if is_covid:
             features = pd.DataFrame([{
                 '연도': req.year, '주차': req.week, '지역_encoded': r_enc,
@@ -119,8 +129,8 @@ async def get_top_danger(req: PredictionRequest):
                 'lag_1': lag_1, 'lag_2': lag_2, 'lag_3': lag_3, 'rolling_mean_3': rolling_mean
             }])
             
-            is_positive = clf_model.predict(features)[0]
-            if is_positive == 1:
+            prob_positive = clf_model.predict_proba(features)[0][1]
+            if prob_positive >= 15:
                 pred_log = reg_model.predict(features)[0]
                 pred_cases = int(np.clip(np.expm1(pred_log), 0, None))
             else:
@@ -169,8 +179,8 @@ async def get_region_prediction(req: RegionPredictionRequest):
             'lag_1': lag_1, 'lag_2': lag_2, 'lag_3': lag_3, 'rolling_mean_3': rolling_mean
         }])
         
-        is_positive = clf_model.predict(features)[0]
-        if is_positive == 1:
+        prob_positive = clf_model.predict_proba(features)[0][1]
+        if prob_positive >= 0.15:
             pred_log = reg_model.predict(features)[0]
             pred_cases = int(np.clip(np.expm1(pred_log), 0, None))
         else:
