@@ -69,17 +69,23 @@ def check_models_loaded():
 
 
 
-def extract_lag_features(df_source, region_name, disease_name=None, is_covid=False):
+def extract_lag_features(df_source, region_name, disease_name, is_covid=False):
     """원천 데이터 히스토리에서 해당 지역/질병의 최신 3개 주차 데이터를 추출해 시차 피처 생성"""
+    r_name = str(region_name).strip()
+    d_name = str(disease_name).strip()
+    
     if is_covid:
-        sub_df = df_source[df_source['지역명'] == region_name]
+        sub_df = df_source[df_source['지역명'].str.contains(r_name, na=False, regex=False)]
     else:
-        sub_df = df_source[(df_source['지역명'] == region_name) & (df_source['질병명'] == disease_name)]
+        sub_df = df_source[
+            (df_source['지역명'].str.contains(r_name, na=False, regex=False)) & 
+            (df_source['질병명'].str.contains(d_name, na=False, regex=False))
+        ]
         
     if sub_df.empty:
         return 0.0, 0.0, 0.0, 0.0
         
-    sub_df = sub_df.sort_values(by=['연도', '주차'], ascending=False)
+    sub_df = sub_df[sub_df['발생건수'].notna()].sort_values(by=['연도', '주차'], ascending=False)
     history = sub_df['발생건수'].values
     
     lag_1 = float(history[0]) if len(history) > 0 else 0.0
@@ -98,7 +104,7 @@ async def get_top_danger(req: PredictionRequest):
     
     target_df = covid_df if is_covid else master_df
     encoder = le_region_covid if is_covid else le_region
-    
+
     all_regions = target_df['지역명'].unique()
     results = []
     
@@ -108,7 +114,9 @@ async def get_top_danger(req: PredictionRequest):
         except ValueError:
             continue
             
-        lag_1, lag_2, lag_3, rolling_mean = extract_lag_features(target_df, r_name, disease, is_covid)
+        lag_1, lag_2, lag_3, rolling_mean = extract_lag_features(
+            target_df, r_name, disease, is_covid=is_covid
+        )
         
         #로그
         if r_name == "서울 강남구":
@@ -157,12 +165,17 @@ async def get_region_prediction(req: RegionPredictionRequest):
     target_df = covid_df if is_covid else master_df
     encoder = le_region_covid if is_covid else le_region
     
+    eval_year = int(target_df['연도'].max())
+    eval_week = int(target_df[target_df['연도'] == eval_year]['주차'].max())
+    
     try:
         r_enc = encoder.transform([req.region])[0]
     except ValueError:
         raise HTTPException(status_code=400, detail="학습 모델 매트릭스에 존재하지 않는 지역명입니다.")
         
-    lag_1, lag_2, lag_3, rolling_mean = extract_lag_features(target_df, req.region, disease, is_covid)
+    lag_1, lag_2, lag_3, rolling_mean = extract_lag_features(
+        target_df, req.region, disease, eval_year, eval_week, is_covid=is_covid
+    )
     
     if is_covid:
         features = pd.DataFrame([{

@@ -12,7 +12,7 @@ export default function PredictionPanel({ diseaseName }) {
   
   const [topDanger, setTopDanger] = useState([]);
   const [nationalCases, setNationalCases] = useState(0);
-  const [prevNationalCases, setPrevNationalCases] = useState(0); // 변동 폭 연산용
+  const [prevNationalCases, setPrevNationalCases] = useState({}); // 변동 폭 연산용
   
   const [loadingTop, setLoadingTop] = useState(false);
   const [loadingSearch, setLoadingSearch] = useState(false);
@@ -84,8 +84,10 @@ export default function PredictionPanel({ diseaseName }) {
         const data = await res.json();
         setTopDanger(data.top_regions || []);
         
-        // 시계열 변동 흐름 트래킹 시각화 데이터 매핑
-        setPrevNationalCases(nationalCases); 
+        setPrevNationalCases(prev => ({
+          ...prev,
+          [diseaseName]: data.national_cases || 0
+        }));
         setNationalCases(data.national_cases || 0);
       }
     } catch (err) {
@@ -228,20 +230,33 @@ export default function PredictionPanel({ diseaseName }) {
           <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#fff' }}>{nationalCases} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>건</span></div>
           
           {/* 전주 대비 상승/하락 조건부 렌더링 팩터 */}
-          {!prevNationalCases || prevNationalCases === 0 ? (
-            // 지난주 데이터가 없거나 0일 때는 깔끔하게 회색 대시(-) 처리
-            <div style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 'bold' }}>-</div>
-          ) : diff > 0 ? (
-            <div style={{ color: '#ef4444', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px' }}>
-              ▲ {diff}건 상승
-            </div>
-          ) : diff < 0 ? (
-            <div style={{ color: '#3b82f6', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px' }}>
-              ▼ {Math.abs(diff)}건 감소
-            </div>
-          ) : (
-            <div style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 'bold' }}>- 변동 없음</div>
-          )}
+          {(() => {
+            // 질병별로 서랍에서 이전 예측 수치를 꺼내옴
+            const prevCases = prevNationalCases[diseaseName];
+            
+            // 데이터가 아예 없거나, 시계열 피처 동결로 인해 현재 계산값과 이전 계산값이 완벽히 똑같다면 대시(-) 처리
+            if (prevCases === undefined || prevCases === nationalCases) {
+              return <div style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 'bold' }}>-</div>;
+            }
+            
+            const currentDiff = nationalCases - prevCases;
+            
+            if (currentDiff > 0) {
+              return (
+                <div style={{ color: '#ef4444', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  ▲ {currentDiff}건 상승
+                </div>
+              );
+            } else if (currentDiff < 0) {
+              return (
+                <div style={{ color: '#3b82f6', fontSize: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  ▼ {Math.abs(currentDiff)}건 감소
+                </div>
+              );
+            } else {
+              return <div style={{ color: '#94a3b8', fontSize: '1rem', fontWeight: 'bold' }}>- 변동 없음</div>;
+            }
+          })()}
         </div>
       </div>
 
